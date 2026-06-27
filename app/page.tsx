@@ -1,65 +1,283 @@
-import Image from "next/image";
+const menuItems = [
+  "Dashboard",
+  "Sản phẩm",
+  "Khách hàng",
+  "Dự án",
+  "Tài chính",
+  "Báo cáo",
+  "Cài đặt",
+];
 
-export default function Home() {
+const statistics = [
+  {
+    title: "Tổng khách hàng",
+    value: "128",
+    description: "+12 khách hàng trong tháng",
+  },
+  {
+    title: "Tổng sản phẩm",
+    value: "356",
+    description: "18 sản phẩm sắp hết",
+  },
+  {
+    title: "Dự án đang thực hiện",
+    value: "24",
+    description: "6 dự án sắp đến hạn",
+  },
+  {
+    title: "Doanh thu tháng",
+    value: "42.500.000 ₫",
+    description: "+8,4% so với tháng trước",
+  },
+];
+
+const projects = [
+  {
+    name: "Robot dò đường",
+    customer: "THPT Nguyễn Hữu Thọ",
+    deadline: "05/07/2026",
+    status: "Đang thực hiện",
+  },
+  {
+    name: "Hệ thống cảnh báo té ngã",
+    customer: "Nguyễn Văn Minh",
+    deadline: "12/07/2026",
+    status: "Chờ khách hàng",
+  },
+  {
+    name: "Mô hình IoT nhà thông minh",
+    customer: "THCS Trần Phú",
+    deadline: "18/07/2026",
+    status: "Đang chuẩn bị",
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <main className="min-h-screen bg-slate-100 text-slate-900">
+      <div className="flex min-h-screen">
+        <aside className="hidden w-64 flex-col border-r border-slate-200 bg-white md:flex">
+          <div className="border-b border-slate-200 px-6 py-6">
+            <h1 className="text-2xl font-bold text-blue-700">SM-LAB CRM</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Workshop Management
+            </p>
+          </div>
+
+          <nav className="flex-1 space-y-2 p-4">
+            {menuItems.map((item, index) => (
+              <a
+                key={item}
+                href="#"
+                className={`block rounded-xl px-4 py-3 text-sm font-medium transition ${
+                  index === 0
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                {item}
+              </a>
+            ))}
+          </nav>
+
+          <div className="border-t border-slate-200 p-4">
+            <div className="rounded-xl bg-slate-100 p-4">
+              <p className="text-sm font-semibold">Quản trị viên</p>
+              <p className="mt-1 text-xs text-slate-500">admin@smlab.vn</p>
+            </div>
+          </div>
+        </aside>
+
+        <section className="flex-1 overflow-hidden">
+          <header className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 md:px-8">
+            <div>
+              <h2 className="text-xl font-bold md:text-2xl">Dashboard</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Tổng quan hoạt động của SM-LAB
+              </p>
+            </div>
+
+            <button className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
+              + Tạo mới
+            </button>
+          </header>
+
+          <div className="p-5 md:p-8">
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              {statistics.map((item) => (
+                <article
+                  key={item.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                >
+                  <p className="text-sm font-medium text-slate-500">
+                    {item.title}
+                  </p>
+
+                  <p className="mt-4 text-2xl font-bold tracking-tight">
+                    {item.value}
+                  </p>
+
+                  <p className="mt-3 text-xs text-slate-500">
+                    {item.description}
+                  </p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-6 grid gap-6 xl:grid-cols-3">
+              <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold">Doanh thu và chi phí</h3>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Thống kê 6 tháng gần nhất
+                    </p>
+                  </div>
+
+                  <select className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none">
+                    <option>6 tháng</option>
+                    <option>12 tháng</option>
+                  </select>
+                </div>
+
+                <div className="mt-8 flex h-64 items-end gap-5 border-b border-l border-slate-200 px-4 pb-4">
+                  {[45, 65, 52, 78, 68, 90].map((height, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-1 flex-col items-center justify-end gap-3"
+                    >
+                      <div className="flex w-full items-end justify-center gap-1">
+                        <div
+                          className="w-5 rounded-t-md bg-blue-600"
+                          style={{ height: `${height * 2}px` }}
+                        />
+
+                        <div
+                          className="w-5 rounded-t-md bg-slate-300"
+                          style={{ height: `${height * 1.25}px` }}
+                        />
+                      </div>
+
+                      <span className="text-xs text-slate-500">
+                        T{index + 1}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-5 flex gap-6 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded bg-blue-600" />
+                    <span>Doanh thu</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded bg-slate-300" />
+                    <span>Chi phí</span>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-lg font-bold">Tổng quan tài chính</h3>
+
+                <div className="mt-6 space-y-5">
+                  <FinancialRow
+                    label="Doanh thu"
+                    value="42.500.000 ₫"
+                  />
+                  <FinancialRow label="Chi phí" value="27.300.000 ₫" />
+                  <FinancialRow label="Lợi nhuận" value="15.200.000 ₫" />
+                  <FinancialRow label="Công nợ" value="8.750.000 ₫" />
+                </div>
+              </section>
+            </div>
+
+            <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+                <div>
+                  <h3 className="text-lg font-bold">Dự án gần đây</h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Theo dõi các dự án đang thực hiện
+                  </p>
+                </div>
+
+                <button className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+                  Xem tất cả
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+                    <tr>
+                      <th className="px-6 py-4">Tên dự án</th>
+                      <th className="px-6 py-4">Khách hàng</th>
+                      <th className="px-6 py-4">Hạn hoàn thành</th>
+                      <th className="px-6 py-4">Trạng thái</th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-slate-200">
+                    {projects.map((project) => (
+                      <tr key={project.name} className="hover:bg-slate-50">
+                        <td className="px-6 py-4 font-semibold">
+                          {project.name}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600">
+                          {project.customer}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600">
+                          {project.deadline}
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusBadge status={project.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+type FinancialRowProps = {
+  label: string;
+  value: string;
+};
+
+function FinancialRow({ label, value }: FinancialRowProps) {
+  return (
+    <div className="flex items-center justify-between border-b border-slate-100 pb-4 last:border-0">
+      <span className="text-sm text-slate-500">{label}</span>
+      <span className="font-bold">{value}</span>
     </div>
+  );
+}
+
+type StatusBadgeProps = {
+  status: string;
+};
+
+function StatusBadge({ status }: StatusBadgeProps) {
+  const statusStyle: Record<string, string> = {
+    "Đang thực hiện": "bg-blue-100 text-blue-700",
+    "Chờ khách hàng": "bg-amber-100 text-amber-700",
+    "Đang chuẩn bị": "bg-violet-100 text-violet-700",
+  };
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+        statusStyle[status] ?? "bg-slate-100 text-slate-700"
+      }`}
+    >
+      {status}
+    </span>
   );
 }
