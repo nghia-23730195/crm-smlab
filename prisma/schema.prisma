@@ -614,18 +614,22 @@ model profiles {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model project_items {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  project_id   String    @db.Uuid
-  product_id   String?   @db.Uuid
-  item_name    String
-  quantity     Decimal   @default(1) @db.Decimal(15, 2)
-  unit_price   Decimal   @default(0) @db.Decimal(15, 2)
-  discount     Decimal   @default(0) @db.Decimal(15, 2)
-  total_amount Decimal?  @default(dbgenerated("GREATEST(((quantity * unit_price) - discount), (0)::numeric)")) @db.Decimal(15, 2)
-  notes        String?
-  created_at   DateTime  @default(now()) @db.Timestamptz(6)
-  products     products? @relation(fields: [product_id], references: [id], onUpdate: NoAction)
-  projects     projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id      String    @db.Uuid
+  product_id      String?   @db.Uuid
+  item_name       String
+  quantity        Decimal   @default(1) @db.Decimal(15, 2)
+  unit_price      Decimal   @default(0) @db.Decimal(15, 2)
+  discount        Decimal   @default(0) @db.Decimal(15, 2)
+  total_amount    Decimal?  @default(dbgenerated("GREATEST(((quantity * unit_price) - discount), (0)::numeric)")) @db.Decimal(15, 2)
+  product_url     String?
+  purchase_status String    @default("not_purchased")
+  notes           String?
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+
+  products products? @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+  projects projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("public")
 }

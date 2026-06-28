@@ -68,9 +68,11 @@ export default async function ProjectsPage({
   const params = await searchParams;
 
   const keyword = String(params.q ?? "").trim();
+
   const selectedStatus = String(
     params.status ?? "all",
   ).trim();
+
   const selectedCustomer = String(
     params.customer ?? "all",
   ).trim();
@@ -174,6 +176,12 @@ export default async function ProjectsPage({
             company_name: true,
           },
         },
+
+        _count: {
+          select: {
+            project_items: true,
+          },
+        },
       },
 
       orderBy: {
@@ -226,7 +234,7 @@ export default async function ProjectsPage({
               name="q"
               defaultValue={keyword}
               placeholder="Tìm mã, tên dự án, khách hàng..."
-              className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
 
             <select
@@ -258,19 +266,27 @@ export default async function ProjectsPage({
               <option value="all">
                 Tất cả trạng thái
               </option>
-              <option value="draft">Nháp</option>
+
+              <option value="draft">
+                Nháp
+              </option>
+
               <option value="planning">
                 Đang chuẩn bị
               </option>
+
               <option value="in_progress">
                 Đang thực hiện
               </option>
+
               <option value="waiting">
                 Chờ khách hàng
               </option>
+
               <option value="completed">
                 Hoàn thành
               </option>
+
               <option value="cancelled">
                 Đã hủy
               </option>
@@ -322,28 +338,41 @@ export default async function ProjectsPage({
           </div>
         ) : (
           <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[1250px]">
+            <table className="w-full min-w-[1320px]">
               <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
                 <tr>
-                  <th className="px-4 py-4">Mã</th>
+                  <th className="px-4 py-4">
+                    Mã
+                  </th>
+
                   <th className="px-4 py-4">
                     Tên dự án
                   </th>
+
                   <th className="px-4 py-4">
                     Khách hàng
                   </th>
+
                   <th className="px-4 py-4">
                     Thời gian
                   </th>
+
                   <th className="px-4 py-4">
                     Giá trị
                   </th>
+
                   <th className="px-4 py-4">
                     Thanh toán
                   </th>
+
+                  <th className="px-4 py-4">
+                    Linh kiện
+                  </th>
+
                   <th className="px-4 py-4">
                     Trạng thái
                   </th>
+
                   <th className="px-4 py-4">
                     Thao tác
                   </th>
@@ -359,6 +388,12 @@ export default async function ProjectsPage({
                     project.customers?.company_name ||
                     project.customers?.full_name ||
                     "Chưa chọn khách hàng";
+
+                  const remainingAmount = Math.max(
+                    0,
+                    Number(project.actual_value) -
+                      Number(project.paid_amount),
+                  );
 
                   return (
                     <tr
@@ -405,7 +440,9 @@ export default async function ProjectsPage({
 
                         <p className="mt-1">
                           Hạn:{" "}
-                          {formatDate(project.due_date)}
+                          {formatDate(
+                            project.due_date,
+                          )}
                         </p>
                       </td>
 
@@ -434,17 +471,26 @@ export default async function ProjectsPage({
                         <p className="mt-1 text-xs text-slate-500">
                           Còn lại:{" "}
                           {formatCurrency(
-                            Math.max(
-                              0,
-                              Number(
-                                project.actual_value,
-                              ) -
-                                Number(
-                                  project.paid_amount,
-                                ),
-                            ),
+                            remainingAmount,
                           )}
                         </p>
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <p className="text-sm font-semibold text-slate-800">
+                          {
+                            project._count
+                              .project_items
+                          }{" "}
+                          linh kiện
+                        </p>
+
+                        <Link
+                          href={`/projects/${project.id}/items`}
+                          className="mt-2 inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                        >
+                          Xem linh kiện
+                        </Link>
                       </td>
 
                       <td className="px-4 py-4">
@@ -458,12 +504,21 @@ export default async function ProjectsPage({
                       </td>
 
                       <td className="px-4 py-4">
-                        <Link
-                          href={`/projects/${project.id}/edit`}
-                          className="inline-flex rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
-                        >
-                          Sửa
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/projects/${project.id}/edit`}
+                            className="inline-flex rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                          >
+                            Sửa
+                          </Link>
+
+                          <Link
+                            href={`/projects/${project.id}/items`}
+                            className="inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                          >
+                            Linh kiện
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );
