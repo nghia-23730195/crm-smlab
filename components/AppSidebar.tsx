@@ -5,31 +5,31 @@ import { usePathname } from "next/navigation";
 
 const menuItems = [
   {
-    name: "Dashboard",
+    label: "Dashboard",
     href: "/",
   },
   {
-    name: "Sản phẩm",
+    label: "Sản phẩm",
     href: "/products",
   },
   {
-    name: "Khách hàng",
+    label: "Khách hàng",
     href: "/customers",
   },
   {
-    name: "Dự án",
+    label: "Dự án",
     href: "/projects",
   },
   {
-    name: "Tài chính",
+    label: "Tài chính",
     href: "/finance",
   },
   {
-    name: "Báo cáo",
+    label: "Báo cáo",
     href: "/reports",
   },
   {
-    name: "Cài đặt",
+    label: "Cài đặt",
     href: "/settings",
   },
 ];
@@ -37,19 +37,11 @@ const menuItems = [
 export default function AppSidebar() {
   const pathname = usePathname();
 
-  function isActive(href: string) {
-    if (href === "/") {
-      return pathname === "/";
-    }
-
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
-
   return (
-    <aside className="hidden min-h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-slate-200 bg-white md:flex">
       <div className="border-b border-slate-200 px-6 py-6">
-        <Link href="/">
-          <h1 className="text-2xl font-bold text-blue-700">
+        <Link href="/" className="block">
+          <h1 className="text-2xl font-bold text-blue-600">
             SM-LAB CRM
           </h1>
         </Link>
@@ -59,29 +51,32 @@ export default function AppSidebar() {
         </p>
       </div>
 
-      <nav className="flex-1 space-y-2 p-4">
+      <nav className="flex-1 space-y-2 overflow-y-auto p-4">
         {menuItems.map((item) => {
-          const active = isActive(item.href);
+          const isActive =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname.startsWith(item.href);
 
           return (
             <Link
               key={item.href}
               href={item.href}
               className={`block rounded-xl px-4 py-3 text-sm font-medium transition ${
-                active
+                isActive
                   ? "bg-blue-600 text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
-              {item.name}
+              {item.label}
             </Link>
           );
         })}
       </nav>
 
       <div className="border-t border-slate-200 p-4">
-        <div className="rounded-xl bg-slate-100 p-4">
-          <p className="text-sm font-semibold text-slate-900">
+        <div className="rounded-xl bg-slate-100 px-4 py-3">
+          <p className="text-sm font-semibold text-slate-800">
             Quản trị viên
           </p>
 
