@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import "./globals.css";
 
-import AppHeader from "@/components/AppHeader";
-import AppSidebar from "@/components/AppSidebar";
+import AppShell from "@/components/AppShell";
+
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "SM-LAB CRM",
-  description: "Hệ thống quản lý SM-LAB",
+  description: "Hệ thống quản lý khách hàng SM-LAB",
 };
 
 export default function RootLayout({
@@ -17,15 +17,7 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className="bg-slate-100 text-slate-900">
-        <div className="min-h-screen">
-          <AppSidebar />
-
-          <div className="min-h-screen md:pl-64">
-            <AppHeader />
-
-            <main>{children}</main>
-          </div>
-        </div>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

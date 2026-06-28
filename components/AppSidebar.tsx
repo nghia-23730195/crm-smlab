@@ -1,7 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import LogoutButton from "@/components/LogoutButton";
+import { createClient } from "@/lib/supabase/client";
 
 const menuItems = [
   {
@@ -36,6 +40,52 @@ const menuItems = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+
+  const [email, setEmail] = useState(
+    "Đang tải tài khoản...",
+  );
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    let isMounted = true;
+
+    async function loadUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!isMounted) {
+        return;
+      }
+
+      setEmail(
+        user?.email ?? "Không xác định",
+      );
+    }
+
+    void loadUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setEmail(
+          session?.user.email ??
+            "Không xác định",
+        );
+      },
+    );
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-slate-200 bg-white md:flex">
@@ -76,15 +126,40 @@ export default function AppSidebar() {
 
       <div className="border-t border-slate-200 p-4">
         <div className="rounded-xl bg-slate-100 px-4 py-3">
-          <p className="text-sm font-semibold text-slate-800">
-            Quản trị viên
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold uppercase text-white">
+              {getEmailInitial(email)}
+            </div>
 
-          <p className="mt-1 text-xs text-slate-500">
-            admin@smlab.vn
-          </p>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-800">
+                Tài khoản đăng nhập
+              </p>
+
+              <p
+                className="mt-1 truncate text-xs text-slate-500"
+                title={email}
+              >
+                {email}
+              </p>
+            </div>
+          </div>
+
+          <LogoutButton />
         </div>
       </div>
     </aside>
   );
+}
+
+function getEmailInitial(email: string) {
+  if (
+    !email ||
+    email === "Đang tải tài khoản..." ||
+    email === "Không xác định"
+  ) {
+    return "SM";
+  }
+
+  return email.charAt(0);
 }
