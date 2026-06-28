@@ -544,21 +544,22 @@ model customers {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model organizations {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name          String
-  phone         String?
-  email         String?
-  address       String?
-  tax_code      String?
-  logo_url      String?
-  created_at    DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
-  activity_logs activity_logs[]
-  customers     customers[]
-  products      products[]
-  profiles      profiles[]
-  projects      projects[]
-  transactions  transactions[]
+  id                 String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  phone              String?
+  email              String?
+  address            String?
+  tax_code           String?
+  logo_url           String?
+  created_at         DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime              @default(now()) @db.Timestamptz(6)
+  activity_logs      activity_logs[]
+  customers          customers[]
+  products           products[]
+  profiles           profiles[]
+  projects           projects[]
+  transactions       transactions[]
+  inventoryMovements inventory_movements[]
 
   @@schema("public")
 }
@@ -566,23 +567,24 @@ model organizations {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model products {
-  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  organization_id String          @db.Uuid
-  product_code    String
-  name            String
-  category        String?
-  description     String?
-  unit            String          @default("cái")
-  cost_price      Decimal         @default(0) @db.Decimal(15, 2)
-  sale_price      Decimal         @default(0) @db.Decimal(15, 2)
-  stock_quantity  Decimal         @default(0) @db.Decimal(15, 2)
-  minimum_stock   Decimal         @default(0) @db.Decimal(15, 2)
-  image_url       String?
-  is_active       Boolean         @default(true)
-  created_at      DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime        @default(now()) @db.Timestamptz(6)
-  organizations   organizations   @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  project_items   project_items[]
+  id                 String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id    String                @db.Uuid
+  product_code       String
+  name               String
+  category           String?
+  description        String?
+  unit               String                @default("cái")
+  cost_price         Decimal               @default(0) @db.Decimal(15, 2)
+  sale_price         Decimal               @default(0) @db.Decimal(15, 2)
+  stock_quantity     Decimal               @default(0) @db.Decimal(15, 2)
+  minimum_stock      Decimal               @default(0) @db.Decimal(15, 2)
+  image_url          String?
+  is_active          Boolean               @default(true)
+  created_at         DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime              @default(now()) @db.Timestamptz(6)
+  organizations      organizations         @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  project_items      project_items[]
+  inventoryMovements inventory_movements[]
 
   @@unique([organization_id, product_code])
   @@schema("public")
@@ -614,19 +616,19 @@ model profiles {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model project_items {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  project_id      String    @db.Uuid
-  product_id      String?   @db.Uuid
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id      String   @db.Uuid
+  product_id      String?  @db.Uuid
   item_name       String
-  quantity        Decimal   @default(1) @db.Decimal(15, 2)
-  unit_price      Decimal   @default(0) @db.Decimal(15, 2)
-  discount        Decimal   @default(0) @db.Decimal(15, 2)
-  total_amount    Decimal?  @default(dbgenerated("GREATEST(((quantity * unit_price) - discount), (0)::numeric)")) @db.Decimal(15, 2)
+  quantity        Decimal  @default(1) @db.Decimal(15, 2)
+  unit_price      Decimal  @default(0) @db.Decimal(15, 2)
+  discount        Decimal  @default(0) @db.Decimal(15, 2)
+  total_amount    Decimal? @default(dbgenerated("GREATEST(((quantity * unit_price) - discount), (0)::numeric)")) @db.Decimal(15, 2)
   product_url     String?
-  purchase_status String    @default("not_purchased")
+  purchase_status String   @default("not_purchased")
   notes           String?
-  created_at      DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
 
   products products? @relation(fields: [product_id], references: [id], onUpdate: NoAction)
   projects projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -637,30 +639,31 @@ model project_items {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model projects {
-  id                                      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  organization_id                         String          @db.Uuid
+  id                                      String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id                         String                @db.Uuid
   project_code                            String
-  customer_id                             String?         @db.Uuid
+  customer_id                             String?               @db.Uuid
   project_name                            String
   project_type                            String?
-  status                                  project_status  @default(draft)
+  status                                  project_status        @default(draft)
   description                             String?
-  start_date                              DateTime?       @db.Date
-  due_date                                DateTime?       @db.Date
-  completed_date                          DateTime?       @db.Date
-  estimated_value                         Decimal         @default(0) @db.Decimal(15, 2)
-  actual_value                            Decimal         @default(0) @db.Decimal(15, 2)
-  paid_amount                             Decimal         @default(0) @db.Decimal(15, 2)
-  assigned_to                             String?         @db.Uuid
-  created_by                              String?         @db.Uuid
-  created_at                              DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at                              DateTime        @default(now()) @db.Timestamptz(6)
+  start_date                              DateTime?             @db.Date
+  due_date                                DateTime?             @db.Date
+  completed_date                          DateTime?             @db.Date
+  estimated_value                         Decimal               @default(0) @db.Decimal(15, 2)
+  actual_value                            Decimal               @default(0) @db.Decimal(15, 2)
+  paid_amount                             Decimal               @default(0) @db.Decimal(15, 2)
+  assigned_to                             String?               @db.Uuid
+  created_by                              String?               @db.Uuid
+  created_at                              DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime              @default(now()) @db.Timestamptz(6)
   project_items                           project_items[]
-  profiles_projects_assigned_toToprofiles profiles?       @relation("projects_assigned_toToprofiles", fields: [assigned_to], references: [id], onUpdate: NoAction)
-  profiles_projects_created_byToprofiles  profiles?       @relation("projects_created_byToprofiles", fields: [created_by], references: [id], onUpdate: NoAction)
-  customers                               customers?      @relation(fields: [customer_id], references: [id], onUpdate: NoAction)
-  organizations                           organizations   @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  profiles_projects_assigned_toToprofiles profiles?             @relation("projects_assigned_toToprofiles", fields: [assigned_to], references: [id], onUpdate: NoAction)
+  profiles_projects_created_byToprofiles  profiles?             @relation("projects_created_byToprofiles", fields: [created_by], references: [id], onUpdate: NoAction)
+  customers                               customers?            @relation(fields: [customer_id], references: [id], onUpdate: NoAction)
+  organizations                           organizations         @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   transactions                            transactions[]
+  inventoryMovements                      inventory_movements[]
 
   @@unique([organization_id, project_code])
   @@schema("public")
@@ -690,6 +693,30 @@ model transactions {
   projects         projects?        @relation(fields: [project_id], references: [id], onUpdate: NoAction)
 
   @@unique([organization_id, transaction_code])
+  @@schema("public")
+}
+
+model inventory_movements {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String   @db.Uuid
+  product_id      String   @db.Uuid
+  project_id      String?  @db.Uuid
+  movement_type   String
+  quantity        Decimal  @db.Decimal(15, 2)
+  unit_price      Decimal  @default(0) @db.Decimal(15, 2)
+  stock_before    Decimal  @default(0) @db.Decimal(15, 2)
+  stock_after     Decimal  @default(0) @db.Decimal(15, 2)
+  notes           String?
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  organizations organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products      products      @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  projects      projects?     @relation(fields: [project_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([organization_id])
+  @@index([product_id])
+  @@index([project_id])
+  @@index([created_at])
   @@schema("public")
 }
 

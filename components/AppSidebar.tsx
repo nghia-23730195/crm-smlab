@@ -17,6 +17,10 @@ const menuItems = [
     href: "/products",
   },
   {
+    label: "Kho linh kiện",
+    href: "/inventory",
+  },
+  {
     label: "Khách hàng",
     href: "/customers",
   },
@@ -106,7 +110,9 @@ export default function AppSidebar() {
           const isActive =
             item.href === "/"
               ? pathname === "/"
-              : pathname.startsWith(item.href);
+              : pathname.startsWith(
+                  item.href,
+                );
 
           return (
             <Link
