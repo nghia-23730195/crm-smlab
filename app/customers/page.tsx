@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import CustomerStatusToggle from "@/components/CustomerStatusToggle";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -8,6 +7,14 @@ export const dynamic = "force-dynamic";
 
 const ORGANIZATION_ID =
   "01aa8406-8a40-4228-8005-84d8ef986922";
+
+type CustomerStatus =
+  | "waiting_quote"
+  | "waiting_topic"
+  | "waiting_close"
+  | "in_progress"
+  | "done"
+  | "cancelled";
 
 type Customer = Awaited<
   ReturnType<typeof prisma.customers.findMany>
@@ -18,13 +25,11 @@ type CustomersPageProps = {
     q?: string;
     type?: string;
     status?: string;
+    success?: string;
   }>;
 };
 
-const customerTypeLabels: Record<
-  string,
-  string
-> = {
+const customerTypeLabels: Record<string, string> = {
   individual: "Cá nhân",
   school: "Trường học",
   business: "Doanh nghiệp",
@@ -32,19 +37,72 @@ const customerTypeLabels: Record<
   other: "Khác",
 };
 
-const statusLabels: Record<string, string> = {
-  lead: "Tiềm năng",
-  contacted: "Đã liên hệ",
-  active: "Đang hoạt động",
-  inactive: "Ngừng hoạt động",
+const customerStatuses: Array<{
+  value: CustomerStatus;
+  label: string;
+}> = [
+  {
+    value: "waiting_quote",
+    label: "Đang chờ báo giá",
+  },
+  {
+    value: "waiting_topic",
+    label: "Đang chờ đề tài",
+  },
+  {
+    value: "waiting_close",
+    label: "Đang chờ chốt",
+  },
+  {
+    value: "in_progress",
+    label: "Đang thực hiện",
+  },
+  {
+    value: "done",
+    label: "Done",
+  },
+  {
+    value: "cancelled",
+    label: "Cancel",
+  },
+];
+
+const statusLabels: Record<CustomerStatus, string> = {
+  waiting_quote: "Đang chờ báo giá",
+  waiting_topic: "Đang chờ đề tài",
+  waiting_close: "Đang chờ chốt",
+  in_progress: "Đang thực hiện",
+  done: "Done",
+  cancelled: "Cancel",
 };
 
-const statusClasses: Record<string, string> = {
-  lead: "bg-violet-100 text-violet-700",
-  contacted: "bg-blue-100 text-blue-700",
-  active: "bg-emerald-100 text-emerald-700",
-  inactive: "bg-slate-200 text-slate-700",
+const statusClasses: Record<CustomerStatus, string> = {
+  waiting_quote:
+    "border border-red-200 bg-red-100 text-red-700",
+
+  waiting_topic:
+    "border border-amber-200 bg-amber-100 text-amber-800",
+
+  waiting_close:
+    "border border-emerald-200 bg-emerald-100 text-emerald-700",
+
+  in_progress:
+    "border border-blue-700 bg-blue-600 text-white",
+
+  done:
+    "border border-emerald-800 bg-emerald-700 text-white",
+
+  cancelled:
+    "border border-red-900 bg-red-800 text-white",
 };
+
+function isCustomerStatus(
+  value: string,
+): value is CustomerStatus {
+  return customerStatuses.some(
+    (status) => status.value === value,
+  );
+}
 
 export default async function CustomersPage({
   searchParams,
@@ -62,6 +120,12 @@ export default async function CustomersPage({
   const selectedStatus = String(
     params.status ?? "all",
   ).trim();
+
+  const statusFilter =
+    selectedStatus !== "all" &&
+    isCustomerStatus(selectedStatus)
+      ? selectedStatus
+      : undefined;
 
   const customers: Customer[] =
     await prisma.customers.findMany({
@@ -111,13 +175,9 @@ export default async function CustomersPage({
             }
           : {}),
 
-        ...(selectedStatus !== "all"
+        ...(statusFilter
           ? {
-              status: selectedStatus as
-                | "lead"
-                | "contacted"
-                | "active"
-                | "inactive",
+              status: statusFilter,
             }
           : {}),
       },
@@ -134,6 +194,18 @@ export default async function CustomersPage({
 
   return (
     <div className="p-5 md:p-8">
+      {params.success === "created" && (
+        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          Thêm khách hàng thành công.
+        </div>
+      )}
+
+      {params.success === "updated" && (
+        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          Cập nhật khách hàng thành công.
+        </div>
+      )}
+
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 p-6">
           <div className="flex flex-col gap-4">
@@ -150,14 +222,14 @@ export default async function CustomersPage({
             <form
               action="/customers"
               method="GET"
-              className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_180px_180px_auto_auto]"
+              className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_180px_200px_auto_auto]"
             >
               <input
                 type="search"
                 name="q"
                 defaultValue={keyword}
                 placeholder="Tìm mã, tên, công ty, điện thoại..."
-                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
 
               <select
@@ -168,18 +240,23 @@ export default async function CustomersPage({
                 <option value="all">
                   Tất cả loại
                 </option>
+
                 <option value="individual">
                   Cá nhân
                 </option>
+
                 <option value="school">
                   Trường học
                 </option>
+
                 <option value="business">
                   Doanh nghiệp
                 </option>
+
                 <option value="dealer">
                   Đại lý
                 </option>
+
                 <option value="other">
                   Khác
                 </option>
@@ -193,18 +270,15 @@ export default async function CustomersPage({
                 <option value="all">
                   Tất cả trạng thái
                 </option>
-                <option value="lead">
-                  Tiềm năng
-                </option>
-                <option value="contacted">
-                  Đã liên hệ
-                </option>
-                <option value="active">
-                  Đang hoạt động
-                </option>
-                <option value="inactive">
-                  Ngừng hoạt động
-                </option>
+
+                {customerStatuses.map((status) => (
+                  <option
+                    key={status.value}
+                    value={status.value}
+                  >
+                    {status.label}
+                  </option>
+                ))}
               </select>
 
               <button
@@ -254,7 +328,7 @@ export default async function CustomersPage({
           </div>
         ) : (
           <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[1150px] table-fixed">
+            <table className="w-full min-w-[1100px] table-fixed">
               <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
                 <tr>
                   <th className="w-[100px] px-4 py-4">
@@ -273,23 +347,26 @@ export default async function CustomersPage({
                     Loại
                   </th>
 
-                  <th className="w-[160px] px-4 py-4">
+                  <th className="w-[150px] px-4 py-4">
                     Nguồn
                   </th>
 
-                  <th className="w-[140px] px-4 py-4">
+                  <th className="w-[180px] px-4 py-4">
                     Trạng thái
                   </th>
 
-                  <th className="w-[210px] px-4 py-4">
+                  <th className="w-[100px] px-4 py-4">
                     Thao tác
                   </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-slate-200">
-                {customers.map(
-                  (customer: Customer) => (
+                {customers.map((customer) => {
+                  const status =
+                    customer.status as CustomerStatus;
+
+                  return (
                     <tr
                       key={customer.id}
                       className="bg-white transition hover:bg-slate-50"
@@ -341,43 +418,27 @@ export default async function CustomersPage({
 
                       <td className="px-4 py-4">
                         <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                            statusClasses[
-                              customer.status
-                            ] ??
+                          className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
+                            statusClasses[status] ??
                             "bg-slate-100 text-slate-700"
                           }`}
                         >
-                          {statusLabels[
-                            customer.status
-                          ] ?? customer.status}
+                          {statusLabels[status] ??
+                            customer.status}
                         </span>
                       </td>
 
                       <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <Link
-                            href={`/customers/${customer.id}/edit`}
-                            className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
-                          >
-                            Sửa
-                          </Link>
-
-                          <CustomerStatusToggle
-                            customerId={customer.id}
-                            customerName={
-                              customer.full_name
-                            }
-                            isInactive={
-                              customer.status ===
-                              "inactive"
-                            }
-                          />
-                        </div>
+                        <Link
+                          href={`/customers/${customer.id}/edit`}
+                          className="inline-flex rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                        >
+                          Sửa
+                        </Link>
                       </td>
                     </tr>
-                  ),
-                )}
+                  );
+                })}
               </tbody>
             </table>
           </div>

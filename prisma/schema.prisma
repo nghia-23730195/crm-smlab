@@ -765,6 +765,13 @@ enum customer_status {
   active
   inactive
 
+  waiting_quote
+  waiting_topic
+  waiting_close
+  in_progress
+  done
+  cancelled
+
   @@schema("public")
 }
 

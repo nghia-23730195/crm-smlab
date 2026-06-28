@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -58,20 +58,20 @@ function getCustomerData(formData: FormData) {
   ) as CustomerStatus;
 
   if (!customerCode) {
-    throw new Error("Vui lòng nhập mã khách hàng.");
+    throw new Error("Vui lÃƒÂ²ng nhÃ¡ÂºÂ­p mÃƒÂ£ khÃƒÂ¡ch hÃƒÂ ng.");
   }
 
   if (!fullName) {
-    throw new Error("Vui lòng nhập họ tên khách hàng.");
+    throw new Error("Vui lÃƒÂ²ng nhÃ¡ÂºÂ­p hÃ¡Â» tÃƒÂªn khÃƒÂ¡ch hÃƒÂ ng.");
   }
 
   if (!customerType) {
-    throw new Error("Vui lòng chọn loại khách hàng.");
+    throw new Error("Vui lÃƒÂ²ng chÃ¡Â»n loÃ¡ÂºÂ¡i khÃƒÂ¡ch hÃƒÂ ng.");
   }
 
   if (!VALID_STATUSES.includes(status)) {
     throw new Error(
-      "Trạng thái khách hàng không hợp lệ.",
+      "TrÃ¡ÂºÂ¡ng thÃƒÂ¡i khÃƒÂ¡ch hÃƒÂ ng khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡.",
     );
   }
 
@@ -80,7 +80,7 @@ function getCustomerData(formData: FormData) {
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   ) {
     throw new Error(
-      "Địa chỉ email không hợp lệ.",
+      "Ã„Ã¡Â»â€¹a chÃ¡Â»â€° email khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡.",
     );
   }
 
@@ -116,7 +116,7 @@ export async function createCustomer(
 
   if (existingCustomer) {
     throw new Error(
-      `Mã khách hàng ${data.customerCode} đã tồn tại.`,
+      `MÃƒÂ£ khÃƒÂ¡ch hÃƒÂ ng ${data.customerCode} Ã„â€˜ÃƒÂ£ tÃ¡Â»â€œn tÃ¡ÂºÂ¡i.`,
     );
   }
 
@@ -163,7 +163,7 @@ export async function updateCustomer(
 
   if (!customer) {
     throw new Error(
-      "Không tìm thấy khách hàng.",
+      "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y khÃƒÂ¡ch hÃƒÂ ng.",
     );
   }
 
@@ -183,7 +183,7 @@ export async function updateCustomer(
 
   if (duplicateCustomer) {
     throw new Error(
-      `Mã khách hàng ${data.customerCode} đã được sử dụng.`,
+      `MÃƒÂ£ khÃƒÂ¡ch hÃƒÂ ng ${data.customerCode} Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c sÃ¡Â»Â­ dÃ¡Â»Â¥ng.`,
     );
   }
 
@@ -232,7 +232,7 @@ export async function toggleCustomerActive(
 
   if (!customer) {
     throw new Error(
-      "Không tìm thấy khách hàng.",
+      "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y khÃƒÂ¡ch hÃƒÂ ng.",
     );
   }
 

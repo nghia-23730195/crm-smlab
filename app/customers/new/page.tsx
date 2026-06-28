@@ -1,6 +1,93 @@
 import Link from "next/link";
 
+import SubmitButton from "@/components/SubmitButton";
+
 import { createCustomer } from "../actions";
+
+const customerTypeOptions = [
+  {
+    value: "individual",
+    label: "Cá nhân",
+  },
+  {
+    value: "school",
+    label: "Trường học",
+  },
+  {
+    value: "business",
+    label: "Doanh nghiệp",
+  },
+  {
+    value: "dealer",
+    label: "Đại lý",
+  },
+  {
+    value: "other",
+    label: "Khác",
+  },
+];
+
+const customerSourceOptions = [
+  {
+    value: "",
+    label: "Chưa xác định",
+  },
+  {
+    value: "Facebook",
+    label: "Facebook",
+  },
+  {
+    value: "Website",
+    label: "Website",
+  },
+  {
+    value: "Zalo",
+    label: "Zalo",
+  },
+  {
+    value: "Giới thiệu",
+    label: "Giới thiệu",
+  },
+  {
+    value: "Khách cũ",
+    label: "Khách cũ",
+  },
+  {
+    value: "Trực tiếp",
+    label: "Trực tiếp",
+  },
+  {
+    value: "Khác",
+    label: "Khác",
+  },
+];
+
+const customerStatusOptions = [
+  {
+    value: "waiting_quote",
+    label: "Đang chờ báo giá",
+  },
+  {
+    value: "waiting_topic",
+    label: "Đang chờ đề tài",
+  },
+  {
+    value: "waiting_close",
+    label: "Đang chờ chốt",
+  },
+  {
+    value: "in_progress",
+    label: "Đang thực hiện",
+  },
+  {
+    value: "done",
+    label: "Done",
+  },
+  {
+    value: "cancelled",
+    label: "Cancel",
+  },
+];
 
 export default function NewCustomerPage() {
   return (
@@ -10,7 +97,17 @@ export default function NewCustomerPage() {
           action={createCustomer}
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
         >
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="border-b border-slate-200 pb-5">
+            <h2 className="text-lg font-bold text-slate-900">
+              Thông tin khách hàng
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Nhập thông tin để thêm khách hàng mới vào hệ thống.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
             <FormField
               label="Mã khách hàng"
               name="customer_code"
@@ -30,13 +127,7 @@ export default function NewCustomerPage() {
               name="customer_type"
               defaultValue="individual"
               required
-              options={[
-                { value: "individual", label: "Cá nhân" },
-                { value: "school", label: "Trường học" },
-                { value: "business", label: "Doanh nghiệp" },
-                { value: "dealer", label: "Đại lý" },
-                { value: "other", label: "Khác" },
-              ]}
+              options={customerTypeOptions}
             />
 
             <FormField
@@ -63,29 +154,15 @@ export default function NewCustomerPage() {
               label="Nguồn khách hàng"
               name="source"
               defaultValue=""
-              options={[
-                { value: "", label: "Chưa xác định" },
-                { value: "Facebook", label: "Facebook" },
-                { value: "Website", label: "Website" },
-                { value: "Zalo", label: "Zalo" },
-                { value: "Giới thiệu", label: "Giới thiệu" },
-                { value: "Khách cũ", label: "Khách cũ" },
-                { value: "Trực tiếp", label: "Trực tiếp" },
-                { value: "Khác", label: "Khác" },
-              ]}
+              options={customerSourceOptions}
             />
 
             <SelectField
               label="Trạng thái"
               name="status"
-              defaultValue="lead"
+              defaultValue="waiting_quote"
               required
-              options={[
-                { value: "lead", label: "Tiềm năng" },
-                { value: "contacted", label: "Đã liên hệ" },
-                { value: "active", label: "Đang hoạt động" },
-                { value: "inactive", label: "Ngừng hoạt động" },
-              ]}
+              options={customerStatusOptions}
             />
           </div>
 
@@ -131,12 +208,10 @@ export default function NewCustomerPage() {
               Hủy
             </Link>
 
-            <button
-              type="submit"
-              className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
-              Thêm khách hàng
-            </button>
+            <SubmitButton
+              idleText="Thêm khách hàng"
+              pendingText="Đang thêm..."
+            />
           </div>
         </form>
       </div>
@@ -168,7 +243,12 @@ function FormField({
         className="mb-2 block text-sm font-semibold text-slate-700"
       >
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+
+        {required && (
+          <span className="ml-1 text-red-500">
+            *
+          </span>
+        )}
       </label>
 
       <input
@@ -211,7 +291,12 @@ function SelectField({
         className="mb-2 block text-sm font-semibold text-slate-700"
       >
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+
+        {required && (
+          <span className="ml-1 text-red-500">
+            *
+          </span>
+        )}
       </label>
 
       <select

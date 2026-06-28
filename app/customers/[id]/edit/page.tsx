@@ -1,14 +1,100 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { prisma } from "@/lib/prisma";
 import { updateCustomer } from "@/app/customers/actions";
+import SubmitButton from "@/components/SubmitButton";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const ORGANIZATION_ID =
   "01aa8406-8a40-4228-8005-84d8ef986922";
+
+const customerTypeOptions = [
+  {
+    value: "individual",
+    label: "Cá nhân",
+  },
+  {
+    value: "school",
+    label: "Trường học",
+  },
+  {
+    value: "business",
+    label: "Doanh nghiệp",
+  },
+  {
+    value: "dealer",
+    label: "Đại lý",
+  },
+  {
+    value: "other",
+    label: "Khác",
+  },
+];
+
+const customerSourceOptions = [
+  {
+    value: "",
+    label: "Chưa xác định",
+  },
+  {
+    value: "Facebook",
+    label: "Facebook",
+  },
+  {
+    value: "Website",
+    label: "Website",
+  },
+  {
+    value: "Zalo",
+    label: "Zalo",
+  },
+  {
+    value: "Giới thiệu",
+    label: "Giới thiệu",
+  },
+  {
+    value: "Khách cũ",
+    label: "Khách cũ",
+  },
+  {
+    value: "Trực tiếp",
+    label: "Trực tiếp",
+  },
+  {
+    value: "Khác",
+    label: "Khác",
+  },
+];
+
+const customerStatusOptions = [
+  {
+    value: "waiting_quote",
+    label: "Đang chờ báo giá",
+  },
+  {
+    value: "waiting_topic",
+    label: "Đang chờ đề tài",
+  },
+  {
+    value: "waiting_close",
+    label: "Đang chờ chốt",
+  },
+  {
+    value: "in_progress",
+    label: "Đang thực hiện",
+  },
+  {
+    value: "done",
+    label: "Done",
+  },
+  {
+    value: "cancelled",
+    label: "Cancel",
+  },
+];
 
 type EditCustomerPageProps = {
   params: Promise<{
@@ -43,7 +129,17 @@ export default async function EditCustomerPage({
           action={updateCustomerWithId}
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
         >
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="border-b border-slate-200 pb-5">
+            <h2 className="text-lg font-bold text-slate-900">
+              Cập nhật khách hàng
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Chỉnh sửa thông tin và trạng thái của khách hàng.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
             <FormField
               label="Mã khách hàng"
               name="customer_code"
@@ -62,28 +158,7 @@ export default async function EditCustomerPage({
               label="Loại khách hàng"
               name="customer_type"
               defaultValue={customer.customer_type}
-              options={[
-                {
-                  value: "individual",
-                  label: "Cá nhân",
-                },
-                {
-                  value: "school",
-                  label: "Trường học",
-                },
-                {
-                  value: "business",
-                  label: "Doanh nghiệp",
-                },
-                {
-                  value: "dealer",
-                  label: "Đại lý",
-                },
-                {
-                  value: "other",
-                  label: "Khác",
-                },
-              ]}
+              options={customerTypeOptions}
               required
             />
 
@@ -113,64 +188,14 @@ export default async function EditCustomerPage({
               label="Nguồn khách hàng"
               name="source"
               defaultValue={customer.source ?? ""}
-              options={[
-                {
-                  value: "",
-                  label: "Chưa xác định",
-                },
-                {
-                  value: "Facebook",
-                  label: "Facebook",
-                },
-                {
-                  value: "Website",
-                  label: "Website",
-                },
-                {
-                  value: "Zalo",
-                  label: "Zalo",
-                },
-                {
-                  value: "Giới thiệu",
-                  label: "Giới thiệu",
-                },
-                {
-                  value: "Khách cũ",
-                  label: "Khách cũ",
-                },
-                {
-                  value: "Trực tiếp",
-                  label: "Trực tiếp",
-                },
-                {
-                  value: "Khác",
-                  label: "Khác",
-                },
-              ]}
+              options={customerSourceOptions}
             />
 
             <SelectField
               label="Trạng thái"
               name="status"
               defaultValue={customer.status}
-              options={[
-                {
-                  value: "lead",
-                  label: "Tiềm năng",
-                },
-                {
-                  value: "contacted",
-                  label: "Đã liên hệ",
-                },
-                {
-                  value: "active",
-                  label: "Đang hoạt động",
-                },
-                {
-                  value: "inactive",
-                  label: "Ngừng hoạt động",
-                },
-              ]}
+              options={customerStatusOptions}
               required
             />
           </div>
@@ -188,7 +213,8 @@ export default async function EditCustomerPage({
               name="address"
               rows={2}
               defaultValue={customer.address ?? ""}
-              className="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Nhập địa chỉ khách hàng"
+              className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
@@ -205,24 +231,23 @@ export default async function EditCustomerPage({
               name="notes"
               rows={4}
               defaultValue={customer.notes ?? ""}
-              className="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Nhập ghi chú về khách hàng"
+              className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
 
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link
               href="/customers"
-              className="rounded-xl border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               Hủy
             </Link>
 
-            <button
-              type="submit"
-              className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Lưu thay đổi
-            </button>
+            <SubmitButton
+              idleText="Lưu thay đổi"
+              pendingText="Đang lưu..."
+            />
           </div>
         </form>
       </div>
@@ -252,6 +277,7 @@ function FormField({
         className="mb-2 block text-sm font-semibold text-slate-700"
       >
         {label}
+
         {required && (
           <span className="ml-1 text-red-500">
             *
@@ -265,7 +291,7 @@ function FormField({
         type={type}
         defaultValue={defaultValue}
         required={required}
-        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
       />
     </div>
   );
@@ -298,6 +324,7 @@ function SelectField({
         className="mb-2 block text-sm font-semibold text-slate-700"
       >
         {label}
+
         {required && (
           <span className="ml-1 text-red-500">
             *
@@ -310,7 +337,7 @@ function SelectField({
         name={name}
         defaultValue={defaultValue}
         required={required}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
       >
         {options.map((option) => (
           <option
