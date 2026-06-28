@@ -1,35 +1,29 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import "./globals.css";
 
 import AppHeader from "@/components/AppHeader";
 import AppSidebar from "@/components/AppSidebar";
 
-import "./globals.css";
-
 export const metadata: Metadata = {
   title: "SM-LAB CRM",
-  description: "Hệ thống quản lý khách hàng, sản phẩm và dự án SM-LAB",
-};
-
-type RootLayoutProps = {
-  children: ReactNode;
+  description: "Hệ thống quản lý SM-LAB",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<RootLayoutProps>) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="vi">
-      <body className="bg-slate-100 text-slate-900 antialiased">
-        <div className="flex min-h-screen">
+      <body className="bg-slate-100 text-slate-900">
+        <div className="min-h-screen">
           <AppSidebar />
 
-          <div className="min-w-0 flex-1">
+          <div className="min-h-screen md:pl-64">
             <AppHeader />
 
-            <main className="min-h-[calc(100vh-80px)] bg-slate-100 text-slate-900">
-              {children}
-            </main>
+            <main>{children}</main>
           </div>
         </div>
       </body>
