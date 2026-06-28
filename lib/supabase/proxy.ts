@@ -7,6 +7,36 @@ import {
 export async function updateSession(
   request: NextRequest,
 ) {
+  const pathname = request.nextUrl.pathname;
+  const isLoginPage = pathname === "/login";
+
+  /*
+   * Cookie Supabase thường có tên chứa:
+   * sb-<project-ref>-auth-token
+   *
+   * Nếu không có cookie Auth và người dùng đang mở /login,
+   * không cần gọi Supabase Auth qua mạng.
+   */
+  const hasSupabaseAuthCookie =
+    request.cookies
+      .getAll()
+      .some(
+        (cookie) =>
+          cookie.name.startsWith("sb-") &&
+          cookie.name.includes(
+            "-auth-token",
+          ),
+      );
+
+  if (
+    isLoginPage &&
+    !hasSupabaseAuthCookie
+  ) {
+    return NextResponse.next({
+      request,
+    });
+  }
+
   let response = NextResponse.next({
     request,
   });
@@ -15,7 +45,8 @@ export async function updateSession(
     process.env.NEXT_PUBLIC_SUPABASE_URL;
 
   const publishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    process.env
+      .NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !publishableKey) {
     throw new Error(
@@ -60,19 +91,20 @@ export async function updateSession(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
-  const isLoginPage = pathname === "/login";
-
   if (!user && !isLoginPage) {
-    const loginUrl = request.nextUrl.clone();
+    const loginUrl =
+      request.nextUrl.clone();
 
     loginUrl.pathname = "/login";
+
     loginUrl.searchParams.set(
       "next",
       `${pathname}${request.nextUrl.search}`,
     );
 
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.redirect(
+      loginUrl,
+    );
   }
 
   if (user && isLoginPage) {
