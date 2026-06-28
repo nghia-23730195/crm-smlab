@@ -9,6 +9,10 @@ export const dynamic = "force-dynamic";
 const ORGANIZATION_ID =
   "01aa8406-8a40-4228-8005-84d8ef986922";
 
+type Product = Awaited<
+  ReturnType<typeof prisma.products.findMany>
+>[number];
+
 function formatCurrency(value: unknown) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -18,14 +22,15 @@ function formatCurrency(value: unknown) {
 }
 
 export default async function ProductsPage() {
-  const products = await prisma.products.findMany({
-    where: {
-      organization_id: ORGANIZATION_ID,
-    },
-    orderBy: {
-      created_at: "desc",
-    },
-  });
+  const products: Product[] =
+    await prisma.products.findMany({
+      where: {
+        organization_id: ORGANIZATION_ID,
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+    });
 
   return (
     <div className="p-5 md:p-8">
@@ -102,7 +107,7 @@ export default async function ProductsPage() {
               </thead>
 
               <tbody className="divide-y divide-slate-200">
-                {products.map((product) => {
+                {products.map((product: Product) => {
                   const stock = Number(
                     product.stock_quantity,
                   );
