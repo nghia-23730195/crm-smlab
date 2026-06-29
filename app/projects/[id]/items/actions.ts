@@ -3,10 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type PurchaseStatus =
   | "not_purchased"
@@ -86,12 +84,16 @@ function validateOptionalUrl(value: string) {
   }
 }
 
-async function verifyProject(projectId: string) {
+async function verifyProject(
+  projectId: string,
+  organizationId: string,
+) {
   const project =
     await prisma.projects.findFirst({
       where: {
         id: projectId,
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
       },
       select: {
         id: true,
@@ -103,6 +105,8 @@ async function verifyProject(projectId: string) {
       "Không tìm thấy dự án.",
     );
   }
+
+  return project;
 }
 
 function getProjectItemData(formData: FormData) {
@@ -183,9 +187,16 @@ export async function createProjectItem(
   projectId: string,
   formData: FormData,
 ) {
-  await verifyProject(projectId);
+  const { organizationId } =
+    await requireCurrentUser();
 
-  const data = getProjectItemData(formData);
+  await verifyProject(
+    projectId,
+    organizationId,
+  );
+
+  const data =
+    getProjectItemData(formData);
 
   await prisma.project_items.create({
     data: {
@@ -218,7 +229,13 @@ export async function updateProjectItem(
   itemId: string,
   formData: FormData,
 ) {
-  await verifyProject(projectId);
+  const { organizationId } =
+    await requireCurrentUser();
+
+  await verifyProject(
+    projectId,
+    organizationId,
+  );
 
   const existingItem =
     await prisma.project_items.findFirst({
@@ -272,7 +289,13 @@ export async function deleteProjectItem(
   projectId: string,
   itemId: string,
 ) {
-  await verifyProject(projectId);
+  const { organizationId } =
+    await requireCurrentUser();
+
+  await verifyProject(
+    projectId,
+    organizationId,
+  );
 
   const item =
     await prisma.project_items.findFirst({

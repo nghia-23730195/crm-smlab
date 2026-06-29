@@ -1,12 +1,10 @@
 import Link from "next/link";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type CustomerStatus =
   | "waiting_quote"
@@ -107,6 +105,9 @@ function isCustomerStatus(
 export default async function CustomersPage({
   searchParams,
 }: CustomersPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const params = await searchParams;
 
   const keyword = String(
@@ -130,7 +131,7 @@ export default async function CustomersPage({
   const customers: Customer[] =
     await prisma.customers.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
 
         ...(keyword
           ? {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import SubmitButton from "@/components/SubmitButton";
 import { prisma } from "@/lib/prisma";
 
@@ -8,9 +9,6 @@ import { createProjectItem } from "../actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type NewProjectItemPageProps = {
   params: Promise<{
@@ -21,6 +19,9 @@ type NewProjectItemPageProps = {
 export default async function NewProjectItemPage({
   params,
 }: NewProjectItemPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const { id } = await params;
 
   const [project, products] =
@@ -29,7 +30,7 @@ export default async function NewProjectItemPage({
         where: {
           id,
           organization_id:
-            ORGANIZATION_ID,
+            organizationId,
         },
         select: {
           id: true,
@@ -41,7 +42,7 @@ export default async function NewProjectItemPage({
       prisma.products.findMany({
         where: {
           organization_id:
-            ORGANIZATION_ID,
+            organizationId,
           is_active: true,
         },
         orderBy: {

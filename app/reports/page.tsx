@@ -1,12 +1,10 @@
 import Link from "next/link";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type ProjectStatus =
   | "draft"
@@ -101,6 +99,9 @@ function getMonthLabel(value: Date) {
 export default async function ReportsPage({
   searchParams,
 }: ReportsPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const params = await searchParams;
 
   const dateFromText = String(params.date_from ?? "").trim();
@@ -134,7 +135,7 @@ export default async function ReportsPage({
   const [transactions, projects, customers] = await Promise.all([
     prisma.transactions.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         ...transactionDateFilter,
       },
       include: {
@@ -161,7 +162,7 @@ export default async function ReportsPage({
 
     prisma.projects.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
       },
       include: {
         customers: {
@@ -179,7 +180,7 @@ export default async function ReportsPage({
 
     prisma.customers.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
       },
       select: {
         id: true,

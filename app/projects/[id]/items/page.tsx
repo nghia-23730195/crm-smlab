@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
 import { deleteProjectItem } from "./actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type ProjectItemsPageProps = {
   params: Promise<{
@@ -65,6 +63,9 @@ export default async function ProjectItemsPage({
   params,
   searchParams,
 }: ProjectItemsPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const { id } = await params;
   const query = await searchParams;
 
@@ -72,7 +73,7 @@ export default async function ProjectItemsPage({
     await prisma.projects.findFirst({
       where: {
         id,
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
       },
 
       include: {

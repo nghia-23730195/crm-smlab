@@ -1,12 +1,9 @@
 import Link from "next/link";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type InventoryPageProps = {
   searchParams: Promise<{
@@ -15,6 +12,7 @@ type InventoryPageProps = {
     category?: string;
   }>;
 };
+
 
 type InventoryStatus =
   | "available"
@@ -84,6 +82,9 @@ function getInventoryStatus(
 export default async function InventoryPage({
   searchParams,
 }: InventoryPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const params = await searchParams;
 
   const keyword = String(
@@ -105,7 +106,7 @@ export default async function InventoryPage({
   ] = await Promise.all([
     prisma.products.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         is_active: true,
 
         ...(keyword
@@ -159,7 +160,7 @@ export default async function InventoryPage({
 
     prisma.products.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         is_active: true,
         category: {
           not: null,
@@ -179,7 +180,7 @@ export default async function InventoryPage({
 
     prisma.products.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         is_active: true,
       },
 

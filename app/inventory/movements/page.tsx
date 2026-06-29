@@ -1,12 +1,10 @@
 ﻿import Link from "next/link";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type InventoryMovementsPageProps = {
   searchParams: Promise<{
@@ -85,6 +83,9 @@ function formatDateTime(value: Date) {
 export default async function InventoryMovementsPage({
   searchParams,
 }: InventoryMovementsPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const params = await searchParams;
 
   const selectedType = String(
@@ -100,7 +101,7 @@ export default async function InventoryMovementsPage({
       prisma.inventory_movements.findMany({
         where: {
           organization_id:
-            ORGANIZATION_ID,
+            organizationId,
 
           ...(selectedType !== "all"
             ? {
@@ -143,9 +144,9 @@ export default async function InventoryMovementsPage({
 
       prisma.products.findMany({
         where: {
-          organization_id:
-            ORGANIZATION_ID,
-          is_active: true,
+         organization_id:
+            organizationId,
+         is_active: true,
         },
 
         select: {

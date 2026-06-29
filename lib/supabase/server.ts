@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+﻿import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function createClient() {
@@ -8,7 +8,8 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL;
 
   const publishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    process.env
+      .NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !publishableKey) {
     throw new Error(

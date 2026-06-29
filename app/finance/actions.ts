@@ -4,10 +4,8 @@ import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type TransactionType = "income" | "expense";
 
@@ -15,20 +13,19 @@ const VALID_TRANSACTION_TYPES: TransactionType[] = [
   "income",
   "expense",
 ];
-
 function getText(formData: FormData, field: string) {
   return String(formData.get(field) ?? "").trim();
 }
 
 function parseTransactionDate(value: string) {
   if (!value) {
-    throw new Error("Vui lòng chọn ngày giao dịch.");
+    throw new Error("Vui lÃ²ng chá»n ngÃ y giao dá»‹ch.");
   }
 
   const [year, month, day] = value.split("-").map(Number);
 
   if (!year || !month || !day) {
-    throw new Error("Ngày giao dịch không hợp lệ.");
+    throw new Error("NgÃ y giao dá»‹ch khÃ´ng há»£p lá»‡.");
   }
 
   return new Date(Date.UTC(year, month - 1, day));
@@ -38,13 +35,13 @@ function parseAmount(value: string) {
   const normalized = value.replace(/[.,\s]/g, "");
 
   if (!normalized) {
-    throw new Error("Vui lòng nhập số tiền.");
+    throw new Error("Vui lÃ²ng nháº­p sá»‘ tiá»n.");
   }
 
   const amount = Number(normalized);
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error("Số tiền phải lớn hơn 0.");
+    throw new Error("Sá»‘ tiá»n pháº£i lá»›n hÆ¡n 0.");
   }
 
   return new Prisma.Decimal(amount);
@@ -62,7 +59,6 @@ function getTransactionData(formData: FormData) {
   ) as TransactionType;
 
   const category = getText(formData, "category");
-
   const amount = parseAmount(
     getText(formData, "amount"),
   );
@@ -78,7 +74,6 @@ function getTransactionData(formData: FormData) {
 
   const projectId = getText(formData, "project_id");
   const customerId = getText(formData, "customer_id");
-
   const description = getText(
     formData,
     "description",
@@ -90,7 +85,7 @@ function getTransactionData(formData: FormData) {
   );
 
   if (!transactionCode) {
-    throw new Error("Vui lòng nhập mã giao dịch.");
+    throw new Error("Vui lÃ²ng nháº­p mÃ£ giao dá»‹ch.");
   }
 
   if (
@@ -98,16 +93,16 @@ function getTransactionData(formData: FormData) {
       transactionType,
     )
   ) {
-    throw new Error("Loại giao dịch không hợp lệ.");
+    throw new Error("Loáº¡i giao dá»‹ch khÃ´ng há»£p lá»‡.");
   }
 
   if (!category) {
-    throw new Error("Vui lòng nhập danh mục.");
+    throw new Error("Vui lÃ²ng nháº­p danh má»¥c.");
   }
 
   if (!paymentMethod) {
     throw new Error(
-      "Vui lòng chọn phương thức thanh toán.",
+      "Vui lÃ²ng chá»n phÆ°Æ¡ng thá»©c thanh toÃ¡n.",
     );
   }
 
@@ -128,12 +123,14 @@ function getTransactionData(formData: FormData) {
 async function validateRelations(
   projectId: string,
   customerId: string,
+  organizationId: string,
 ) {
   if (projectId) {
     const project = await prisma.projects.findFirst({
       where: {
         id: projectId,
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
       },
       select: {
         id: true,
@@ -143,7 +140,7 @@ async function validateRelations(
 
     if (!project) {
       throw new Error(
-        "Dự án được chọn không tồn tại.",
+        "Dá»± Ã¡n Ä‘Æ°á»£c chá»n khÃ´ng tá»“n táº¡i.",
       );
     }
 
@@ -153,7 +150,7 @@ async function validateRelations(
       project.customer_id !== customerId
     ) {
       throw new Error(
-        "Khách hàng được chọn không khớp với khách hàng của dự án.",
+        "KhÃ¡ch hÃ ng Ä‘Æ°á»£c chá»n khÃ´ng khá»›p vá»›i khÃ¡ch hÃ ng cá»§a dá»± Ã¡n.",
       );
     }
   }
@@ -163,7 +160,8 @@ async function validateRelations(
       await prisma.customers.findFirst({
         where: {
           id: customerId,
-          organization_id: ORGANIZATION_ID,
+          organization_id:
+            organizationId,
         },
         select: {
           id: true,
@@ -172,7 +170,7 @@ async function validateRelations(
 
     if (!customer) {
       throw new Error(
-        "Khách hàng được chọn không tồn tại.",
+        "KhÃ¡ch hÃ ng Ä‘Æ°á»£c chá»n khÃ´ng tá»“n táº¡i.",
       );
     }
   }
@@ -181,12 +179,17 @@ async function validateRelations(
 export async function createTransaction(
   formData: FormData,
 ) {
-  const data = getTransactionData(formData);
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const data =
+    getTransactionData(formData);
 
   const duplicate =
     await prisma.transactions.findFirst({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
         transaction_code: data.transactionCode,
       },
       select: {
@@ -196,31 +199,55 @@ export async function createTransaction(
 
   if (duplicate) {
     throw new Error(
-      `Mã giao dịch ${data.transactionCode} đã tồn tại.`,
+      `MÃ£ giao dá»‹ch ${data.transactionCode} Ä‘Ã£ tá»“n táº¡i.`,
     );
   }
 
   await validateRelations(
     data.projectId,
     data.customerId,
-  );
+    organizationId,
+);
 
-  await prisma.transactions.create({
-    data: {
-      organization_id: ORGANIZATION_ID,
-      transaction_code: data.transactionCode,
-      project_id: data.projectId || null,
-      customer_id: data.customerId || null,
-      transaction_type: data.transactionType,
-      category: data.category,
-      amount: data.amount,
-      payment_method: data.paymentMethod,
-      transaction_date: data.transactionDate,
-      description: data.description || null,
-      attachment_url: data.attachmentUrl || null,
-      created_by: null,
-    },
-  });
+ await prisma.transactions.create({
+  data: {
+    organization_id:
+      organizationId,
+
+    transaction_code:
+      data.transactionCode,
+
+    project_id:
+      data.projectId || null,
+
+    customer_id:
+      data.customerId || null,
+
+    transaction_type:
+      data.transactionType,
+
+    category:
+      data.category,
+
+    amount:
+      data.amount,
+
+    payment_method:
+      data.paymentMethod,
+
+    transaction_date:
+      data.transactionDate,
+
+    description:
+      data.description || null,
+
+    attachment_url:
+      data.attachmentUrl || null,
+
+    created_by:
+      null,
+  },
+});
 
   revalidatePath("/finance");
   revalidatePath("/");
@@ -233,13 +260,17 @@ export async function updateTransaction(
   transactionId: string,
   formData: FormData,
 ) {
-  const data = getTransactionData(formData);
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const data =
+    getTransactionData(formData);
 
   const currentTransaction =
     await prisma.transactions.findFirst({
       where: {
         id: transactionId,
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
       },
       select: {
         id: true,
@@ -248,14 +279,14 @@ export async function updateTransaction(
 
   if (!currentTransaction) {
     throw new Error(
-      "Không tìm thấy giao dịch cần cập nhật.",
+      "KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch cáº§n cáº­p nháº­t.",
     );
   }
 
   const duplicate =
     await prisma.transactions.findFirst({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         transaction_code: data.transactionCode,
         NOT: {
           id: transactionId,
@@ -267,39 +298,63 @@ export async function updateTransaction(
     });
 
   if (duplicate) {
-    throw new Error(
-      `Mã giao dịch ${data.transactionCode} đã được sử dụng.`,
-    );
-  }
-
-  await validateRelations(
-    data.projectId,
-    data.customerId,
+  throw new Error(
+    `MÃ£ giao dá»‹ch ${data.transactionCode} Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.`,
   );
+}
 
-  await prisma.transactions.update({
-    where: {
-      id: transactionId,
-    },
-    data: {
-      transaction_code: data.transactionCode,
-      project_id: data.projectId || null,
-      customer_id: data.customerId || null,
-      transaction_type: data.transactionType,
-      category: data.category,
-      amount: data.amount,
-      payment_method: data.paymentMethod,
-      transaction_date: data.transactionDate,
-      description: data.description || null,
-      attachment_url: data.attachmentUrl || null,
-      updated_at: new Date(),
-    },
-  });
+await validateRelations(
+  data.projectId,
+  data.customerId,
+  organizationId,
+);
 
-  revalidatePath("/finance");
-  revalidatePath(`/finance/${transactionId}/edit`);
-  revalidatePath("/");
-  revalidatePath("/projects");
+await prisma.transactions.update({
+  where: {
+    id: currentTransaction.id,
+  },
+  data: {
+    transaction_code:
+      data.transactionCode,
 
-  redirect("/finance");
+    project_id:
+      data.projectId || null,
+
+    customer_id:
+      data.customerId || null,
+
+    transaction_type:
+      data.transactionType,
+
+    category:
+      data.category,
+
+    amount:
+      data.amount,
+
+    payment_method:
+      data.paymentMethod,
+
+    transaction_date:
+      data.transactionDate,
+
+    description:
+      data.description || null,
+
+    attachment_url:
+      data.attachmentUrl || null,
+
+    updated_at:
+      new Date(),
+  },
+});
+
+revalidatePath("/finance");
+revalidatePath(
+  `/finance/${transactionId}/edit`,
+);
+revalidatePath("/");
+revalidatePath("/projects");
+
+redirect("/finance");
 }

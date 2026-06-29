@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { updateTransaction } from "@/app/finance/actions";
+import SubmitButton from "@/components/SubmitButton";
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+import { updateTransaction } from "../../actions";
 
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
+export const runtime = "nodejs";
 
 type EditTransactionPageProps = {
   params: Promise<{
@@ -27,6 +26,9 @@ function formatDateInput(value: Date) {
 export default async function EditTransactionPage({
   params,
 }: EditTransactionPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const { id } = await params;
 
   const [transaction, projects, customers] =
@@ -34,13 +36,15 @@ export default async function EditTransactionPage({
       prisma.transactions.findFirst({
         where: {
           id,
-          organization_id: ORGANIZATION_ID,
+          organization_id:
+            organizationId,
         },
       }),
 
       prisma.projects.findMany({
         where: {
-          organization_id: ORGANIZATION_ID,
+          organization_id:
+            organizationId,
         },
         select: {
           id: true,
@@ -55,7 +59,8 @@ export default async function EditTransactionPage({
 
       prisma.customers.findMany({
         where: {
-          organization_id: ORGANIZATION_ID,
+          organization_id:
+            organizationId,
         },
         select: {
           id: true,

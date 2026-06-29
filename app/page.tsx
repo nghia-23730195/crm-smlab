@@ -1,12 +1,10 @@
 import Link from "next/link";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type ProjectStatus =
   | "draft"
@@ -111,6 +109,9 @@ function getRecentMonths(count: number, now: Date) {
 }
 
 export default async function DashboardPage() {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const now = new Date();
 
   const currentMonthStart = startOfUTCMonth(now);
@@ -157,7 +158,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     prisma.customers.count({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         status: {
           not: "inactive",
         },
@@ -166,7 +167,7 @@ export default async function DashboardPage() {
 
     prisma.customers.count({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         created_at: {
           gte: currentMonthStart,
           lt: nextMonthStart,
@@ -176,14 +177,14 @@ export default async function DashboardPage() {
 
     prisma.products.count({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         is_active: true,
       },
     }),
 
     prisma.products.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         is_active: true,
       },
       select: {
@@ -194,7 +195,7 @@ export default async function DashboardPage() {
 
     prisma.projects.count({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         status: {
           in: [
             "planning",
@@ -207,7 +208,7 @@ export default async function DashboardPage() {
 
     prisma.projects.count({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         due_date: {
           gte: now,
           lte: sevenDaysLater,
@@ -220,7 +221,7 @@ export default async function DashboardPage() {
 
     prisma.transactions.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         transaction_date: {
           gte: currentMonthStart,
           lt: nextMonthStart,
@@ -234,7 +235,7 @@ export default async function DashboardPage() {
 
     prisma.transactions.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         transaction_type: "income",
         transaction_date: {
           gte: previousMonthStart,
@@ -248,7 +249,7 @@ export default async function DashboardPage() {
 
     prisma.transactions.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         transaction_date: {
           gte: firstChartMonth,
           lt: nextMonthStart,
@@ -266,7 +267,7 @@ export default async function DashboardPage() {
 
     prisma.projects.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
       },
       select: {
         actual_value: true,
@@ -276,7 +277,7 @@ export default async function DashboardPage() {
 
     prisma.projects.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
       },
       include: {
         customers: {

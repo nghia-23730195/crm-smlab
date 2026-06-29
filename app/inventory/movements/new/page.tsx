@@ -1,4 +1,6 @@
-﻿import Link from "next/link";
+import Link from "next/link";
+
+import { requireCurrentUser } from "@/lib/auth/current-user";
 
 import SubmitButton from "@/components/SubmitButton";
 import { prisma } from "@/lib/prisma";
@@ -8,14 +10,16 @@ import { createInventoryMovement } from "../../actions";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
-
 export default async function NewInventoryMovementPage() {
-  const [products, projects] = await Promise.all([
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const [products, projects] =
+    await Promise.all([
     prisma.products.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
         is_active: true,
       },
       select: {
@@ -32,7 +36,8 @@ export default async function NewInventoryMovementPage() {
 
     prisma.projects.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
         status: {
           notIn: ["completed", "cancelled"],
         },
@@ -72,12 +77,18 @@ export default async function NewInventoryMovementPage() {
               defaultValue="import"
               required
               options={[
-                { value: "import", label: "Nhập kho" },
+                {
+                  value: "import",
+                  label: "Nhập kho",
+                },
                 {
                   value: "project_use",
                   label: "Xuất cho dự án",
                 },
-                { value: "return", label: "Hoàn kho" },
+                {
+                  value: "return",
+                  label: "Hoàn kho",
+                },
                 {
                   value: "adjustment_in",
                   label: "Điều chỉnh tăng",
@@ -207,6 +218,7 @@ function SelectField({
         className="mb-2 block text-sm font-semibold text-slate-700"
       >
         {label}
+
         {required && (
           <span className="ml-1 text-red-500">
             *
@@ -260,6 +272,7 @@ function FormField({
         className="mb-2 block text-sm font-semibold text-slate-700"
       >
         {label}
+
         {required && (
           <span className="ml-1 text-red-500">
             *

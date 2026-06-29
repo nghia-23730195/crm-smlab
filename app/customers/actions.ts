@@ -1,27 +1,32 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
-
 type CustomerStatus =
-  | "lead"
-  | "contacted"
-  | "active"
-  | "inactive";
+  | "waiting_quote"
+  | "waiting_topic"
+  | "waiting_close"
+  | "in_progress"
+  | "done"
+  | "cancelled";
 
 const VALID_STATUSES: CustomerStatus[] = [
-  "lead",
-  "contacted",
-  "active",
-  "inactive",
+  "waiting_quote",
+  "waiting_topic",
+  "waiting_close",
+  "in_progress",
+  "done",
+  "cancelled",
 ];
 
-function getText(formData: FormData, field: string) {
+function getText(
+  formData: FormData,
+  field: string,
+) {
   return String(formData.get(field) ?? "").trim();
 }
 
@@ -58,20 +63,26 @@ function getCustomerData(formData: FormData) {
   ) as CustomerStatus;
 
   if (!customerCode) {
-    throw new Error("Vui lÃƒÂ²ng nhÃ¡ÂºÂ­p mÃƒÂ£ khÃƒÂ¡ch hÃƒÂ ng.");
+    throw new Error(
+      "Vui lòng nhập mã khách hàng.",
+    );
   }
 
   if (!fullName) {
-    throw new Error("Vui lÃƒÂ²ng nhÃ¡ÂºÂ­p hÃ¡Â» tÃƒÂªn khÃƒÂ¡ch hÃƒÂ ng.");
+    throw new Error(
+      "Vui lòng nhập họ tên khách hàng.",
+    );
   }
 
   if (!customerType) {
-    throw new Error("Vui lÃƒÂ²ng chÃ¡Â»n loÃ¡ÂºÂ¡i khÃƒÂ¡ch hÃƒÂ ng.");
+    throw new Error(
+      "Vui lòng chọn loại khách hàng.",
+    );
   }
 
   if (!VALID_STATUSES.includes(status)) {
     throw new Error(
-      "TrÃ¡ÂºÂ¡ng thÃƒÂ¡i khÃƒÂ¡ch hÃƒÂ ng khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡.",
+      "Trạng thái khách hàng không hợp lệ.",
     );
   }
 
@@ -80,7 +91,7 @@ function getCustomerData(formData: FormData) {
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   ) {
     throw new Error(
-      "Ã„Ã¡Â»â€¹a chÃ¡Â»â€° email khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡.",
+      "Địa chỉ email không hợp lệ.",
     );
   }
 
@@ -101,14 +112,21 @@ function getCustomerData(formData: FormData) {
 export async function createCustomer(
   formData: FormData,
 ) {
-  const data = getCustomerData(formData);
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const data =
+    getCustomerData(formData);
 
   const existingCustomer =
     await prisma.customers.findFirst({
       where: {
-        organization_id: ORGANIZATION_ID,
-        customer_code: data.customerCode,
-      },
+        organization_id:
+            organizationId,
+
+        customer_code:
+            data.customerCode,
+        },
       select: {
         id: true,
       },
@@ -116,14 +134,17 @@ export async function createCustomer(
 
   if (existingCustomer) {
     throw new Error(
-      `MÃƒÂ£ khÃƒÂ¡ch hÃƒÂ ng ${data.customerCode} Ã„â€˜ÃƒÂ£ tÃ¡Â»â€œn tÃ¡ÂºÂ¡i.`,
+      `Mã khách hàng ${data.customerCode} đã tồn tại.`,
     );
   }
 
   await prisma.customers.create({
     data: {
-      organization_id: ORGANIZATION_ID,
-      customer_code: data.customerCode,
+     organization_id:
+        organizationId,
+
+    customer_code:
+      data.customerCode,
       customer_type: data.customerType,
       full_name: data.fullName,
       company_name: data.companyName || null,
@@ -139,22 +160,28 @@ export async function createCustomer(
   });
 
   revalidatePath("/customers");
+  revalidatePath("/reports");
   revalidatePath("/");
 
-  redirect("/customers");
+  redirect("/customers?success=created");
 }
 
 export async function updateCustomer(
   customerId: string,
   formData: FormData,
 ) {
-  const data = getCustomerData(formData);
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const data =
+    getCustomerData(formData);
 
   const customer =
     await prisma.customers.findFirst({
       where: {
         id: customerId,
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
       },
       select: {
         id: true,
@@ -163,19 +190,23 @@ export async function updateCustomer(
 
   if (!customer) {
     throw new Error(
-      "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y khÃƒÂ¡ch hÃƒÂ ng.",
+      "Không tìm thấy khách hàng.",
     );
   }
 
   const duplicateCustomer =
     await prisma.customers.findFirst({
       where: {
-        organization_id: ORGANIZATION_ID,
-        customer_code: data.customerCode,
+        organization_id:
+            organizationId,
+
+        customer_code:
+            data.customerCode,
+
         NOT: {
-          id: customerId,
+            id: customerId,
         },
-      },
+        },
       select: {
         id: true,
       },
@@ -183,7 +214,7 @@ export async function updateCustomer(
 
   if (duplicateCustomer) {
     throw new Error(
-      `MÃƒÂ£ khÃƒÂ¡ch hÃƒÂ ng ${data.customerCode} Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c sÃ¡Â»Â­ dÃ¡Â»Â¥ng.`,
+      `Mã khách hàng ${data.customerCode} đã được sử dụng.`,
     );
   }
 
@@ -210,19 +241,29 @@ export async function updateCustomer(
   revalidatePath(
     `/customers/${customerId}/edit`,
   );
+  revalidatePath("/reports");
   revalidatePath("/");
 
-  redirect("/customers");
+  redirect("/customers?success=updated");
 }
 
+/*
+ * Giữ lại hàm này để component cũ không bị lỗi import.
+ * Sau khi giao diện mới không còn dùng CustomerStatusToggle,
+ * có thể xóa component và hàm này.
+ */
 export async function toggleCustomerActive(
   customerId: string,
 ) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const customer =
     await prisma.customers.findFirst({
       where: {
         id: customerId,
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
       },
       select: {
         id: true,
@@ -232,25 +273,23 @@ export async function toggleCustomerActive(
 
   if (!customer) {
     throw new Error(
-      "KhÃƒÂ´ng tÃƒÂ¬m thÃ¡ÂºÂ¥y khÃƒÂ¡ch hÃƒÂ ng.",
+      "Không tìm thấy khách hàng.",
     );
   }
 
-  const nextStatus: CustomerStatus =
-    customer.status === "inactive"
-      ? "active"
-      : "inactive";
-
   await prisma.customers.update({
     where: {
-      id: customerId,
+      id: customer.id,
     },
     data: {
-      status: nextStatus,
-      updated_at: new Date(),
+      status:
+        customer.status === "inactive"
+          ? "active"
+          : "inactive",
+      updated_at:
+        new Date(),
     },
   });
 
   revalidatePath("/customers");
-  revalidatePath("/");
 }

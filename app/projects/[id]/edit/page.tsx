@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { updateProject } from "@/app/projects/actions";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type EditProjectPageProps = {
   params: Promise<{
@@ -31,19 +29,22 @@ function formatDateInput(value: Date | null) {
 export default async function EditProjectPage({
   params,
 }: EditProjectPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const { id } = await params;
 
   const [project, customers] = await Promise.all([
     prisma.projects.findFirst({
       where: {
         id,
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
       },
     }),
 
     prisma.customers.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
       },
       select: {
         id: true,

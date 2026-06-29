@@ -1,13 +1,13 @@
 import Link from "next/link";
 
+import SubmitButton from "@/components/SubmitButton";
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
+
 import { createTransaction } from "../actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 function getTodayInputValue() {
   const now = new Date();
@@ -20,31 +20,33 @@ function getTodayInputValue() {
 }
 
 export default async function NewTransactionPage() {
-  const [projects, customers] = await Promise.all([
-    prisma.projects.findMany({
-      where: {
-        organization_id: ORGANIZATION_ID,
-        status: {
-          not: "cancelled",
-        },
-      },
-      select: {
-        id: true,
-        project_code: true,
-        project_name: true,
-      },
-      orderBy: {
-        project_name: "asc",
-      },
-    }),
+  const { organizationId } =
+    await requireCurrentUser();
 
-    prisma.customers.findMany({
-      where: {
-        organization_id: ORGANIZATION_ID,
-        status: {
-          not: "inactive",
+  const [projects, customers] =
+    await Promise.all([
+      prisma.projects.findMany({
+        where: {
+          organization_id:
+            organizationId,
+
+          status: {
+            not: "cancelled",
+          },
         },
-      },
+
+        // Giữ nguyên orderBy, select và các phần khác.
+      }),
+
+      prisma.customers.findMany({
+        where: {
+          organization_id:
+            organizationId,
+
+          status: {
+            not: "inactive",
+          },
+        },
       select: {
         id: true,
         customer_code: true,

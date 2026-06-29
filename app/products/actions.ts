@@ -3,10 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 function readProductForm(formData: FormData) {
   const productCode = String(
@@ -89,14 +87,19 @@ function readProductForm(formData: FormData) {
 export async function createProduct(
   formData: FormData,
 ) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const values = readProductForm(formData);
 
   const existingProduct =
     await prisma.products.findFirst({
       where: {
-        organization_id: ORGANIZATION_ID,
-        product_code: values.productCode,
-      },
+        organization_id:
+            organizationId,
+        product_code:
+            values.productCode,
+        },
     });
 
   if (existingProduct) {
@@ -107,8 +110,10 @@ export async function createProduct(
 
   await prisma.products.create({
     data: {
-      organization_id: ORGANIZATION_ID,
-      product_code: values.productCode,
+        organization_id:
+            organizationId,
+        product_code:
+            values.productCode,
       name: values.name,
       category: values.category || null,
       description: values.description || null,
@@ -130,13 +135,18 @@ export async function updateProduct(
   productId: string,
   formData: FormData,
 ) {
-  const values = readProductForm(formData);
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const values =
+    readProductForm(formData);
 
   const currentProduct =
     await prisma.products.findFirst({
       where: {
         id: productId,
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
       },
     });
 
@@ -147,15 +157,19 @@ export async function updateProduct(
   }
 
   const duplicatedProduct =
-    await prisma.products.findFirst({
-      where: {
-        organization_id: ORGANIZATION_ID,
-        product_code: values.productCode,
-        NOT: {
-          id: productId,
-        },
+  await prisma.products.findFirst({
+    where: {
+      organization_id:
+        organizationId,
+
+      product_code:
+        values.productCode,
+
+      NOT: {
+        id: productId,
       },
-    });
+    },
+  });
 
   if (duplicatedProduct) {
     throw new Error(
@@ -193,11 +207,15 @@ export async function updateProduct(
 export async function toggleProductActive(
   productId: string,
 ) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const product =
     await prisma.products.findFirst({
       where: {
         id: productId,
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
       },
     });
 
@@ -209,11 +227,13 @@ export async function toggleProductActive(
 
   await prisma.products.update({
     where: {
-      id: productId,
+      id: product.id,
     },
     data: {
-      is_active: !product.is_active,
-      updated_at: new Date(),
+      is_active:
+        !product.is_active,
+      updated_at:
+        new Date(),
     },
   });
 

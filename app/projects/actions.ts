@@ -3,10 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type ProjectStatus =
   | "draft"
@@ -34,13 +32,13 @@ function parseOptionalDate(value: string) {
     return null;
   }
 
-  const date = new Date(`${value}T00:00:00`);
+  const [year, month, day] = value.split("-").map(Number);
 
-  if (Number.isNaN(date.getTime())) {
+  if (!year || !month || !day) {
     throw new Error("Ngày tháng không hợp lệ.");
   }
 
-  return date;
+  return new Date(Date.UTC(year, month - 1, day));
 }
 
 function parseMoney(value: string, fieldLabel: string) {
@@ -142,13 +140,19 @@ function getProjectData(formData: FormData) {
   };
 }
 
-export async function createProject(formData: FormData) {
-  const data = getProjectData(formData);
+export async function createProject(
+  formData: FormData,
+) {
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const data =
+    getProjectData(formData);
 
   const duplicateProject =
     await prisma.projects.findFirst({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         project_code: data.projectCode,
       },
       select: {
@@ -167,7 +171,7 @@ export async function createProject(formData: FormData) {
       await prisma.customers.findFirst({
         where: {
           id: data.customerId,
-          organization_id: ORGANIZATION_ID,
+          organization_id: organizationId,
         },
         select: {
           id: true,
@@ -183,7 +187,7 @@ export async function createProject(formData: FormData) {
 
   await prisma.projects.create({
     data: {
-      organization_id: ORGANIZATION_ID,
+      organization_id: organizationId,
       project_code: data.projectCode,
       project_name: data.projectName,
       customer_id: data.customerId || null,
@@ -214,13 +218,17 @@ export async function updateProject(
   projectId: string,
   formData: FormData,
 ) {
-  const data = getProjectData(formData);
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const data =
+    getProjectData(formData);
 
   const currentProject =
     await prisma.projects.findFirst({
       where: {
         id: projectId,
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
       },
       select: {
         id: true,
@@ -236,7 +244,7 @@ export async function updateProject(
   const duplicateProject =
     await prisma.projects.findFirst({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
         project_code: data.projectCode,
         NOT: {
           id: projectId,
@@ -258,7 +266,7 @@ export async function updateProject(
       await prisma.customers.findFirst({
         where: {
           id: data.customerId,
-          organization_id: ORGANIZATION_ID,
+          organization_id: organizationId,
         },
         select: {
           id: true,
@@ -307,15 +315,21 @@ export async function changeProjectStatus(
   projectId: string,
   nextStatus: ProjectStatus,
 ) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   if (!VALID_STATUSES.includes(nextStatus)) {
-    throw new Error("Trạng thái dự án không hợp lệ.");
+    throw new Error(
+      "Trạng thái dự án không hợp lệ.",
+    );
   }
 
   const project =
     await prisma.projects.findFirst({
       where: {
         id: projectId,
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
       },
       select: {
         id: true,
@@ -323,12 +337,14 @@ export async function changeProjectStatus(
     });
 
   if (!project) {
-    throw new Error("Không tìm thấy dự án.");
+    throw new Error(
+      "Không tìm thấy dự án.",
+    );
   }
 
   await prisma.projects.update({
     where: {
-      id: projectId,
+      id: project.id,
     },
     data: {
       status: nextStatus,

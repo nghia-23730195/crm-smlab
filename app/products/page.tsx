@@ -1,13 +1,12 @@
 import Link from "next/link";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
+
 import ProductStatusToggle from "@/components/ProductStatusToggle";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type Product = Awaited<
   ReturnType<typeof prisma.products.findMany>
@@ -69,6 +68,9 @@ function getStatusLabel(status: string) {
 export default async function ProductsPage({
   searchParams,
 }: ProductsPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const params = await searchParams;
 
   const keyword = String(params.q ?? "").trim();
@@ -80,7 +82,7 @@ export default async function ProductsPage({
   const allProducts: Product[] =
     await prisma.products.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id: organizationId,
 
         ...(keyword
           ? {

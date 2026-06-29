@@ -1,13 +1,11 @@
 import SubmitButton from "@/components/SubmitButton";
 import { prisma } from "@/lib/prisma";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { updateOrganization } from "./actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type SettingsPageProps = {
   searchParams: Promise<{
@@ -19,12 +17,15 @@ type SettingsPageProps = {
 export default async function SettingsPage({
   searchParams,
 }: SettingsPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const params = await searchParams;
 
   const organization =
     await prisma.organizations.findUnique({
       where: {
-        id: ORGANIZATION_ID,
+        id: organizationId,
       },
     });
 

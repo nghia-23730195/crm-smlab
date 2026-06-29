@@ -3,13 +3,11 @@ import { notFound } from "next/navigation";
 
 import { updateCustomer } from "@/app/customers/actions";
 import SubmitButton from "@/components/SubmitButton";
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 const customerTypeOptions = [
   {
@@ -105,13 +103,17 @@ type EditCustomerPageProps = {
 export default async function EditCustomerPage({
   params,
 }: EditCustomerPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const { id } = await params;
 
   const customer =
     await prisma.customers.findFirst({
       where: {
         id,
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
       },
     });
 

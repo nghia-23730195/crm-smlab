@@ -3,10 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 function getText(formData: FormData, fieldName: string) {
   return String(formData.get(fieldName) ?? "").trim();
@@ -21,6 +19,9 @@ function redirectWithError(message: string): never {
 export async function updateOrganization(
   formData: FormData,
 ) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const name = getText(formData, "name");
   const phone = getText(formData, "phone");
   const email = getText(formData, "email");
@@ -56,7 +57,7 @@ export async function updateOrganization(
   const result =
     await prisma.organizations.updateMany({
       where: {
-        id: ORGANIZATION_ID,
+        id: organizationId,
       },
       data: {
         name,

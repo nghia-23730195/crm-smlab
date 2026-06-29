@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
+
 import { prisma } from "@/lib/prisma";
 import { updateProduct } from "../../actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type EditProductPageProps = {
   params: Promise<{
@@ -19,12 +18,15 @@ type EditProductPageProps = {
 export default async function EditProductPage({
   params,
 }: EditProductPageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const { id } = await params;
 
   const product = await prisma.products.findFirst({
     where: {
       id,
-      organization_id: ORGANIZATION_ID,
+      organization_id: organizationId,
     },
   });
 

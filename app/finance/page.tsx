@@ -1,12 +1,10 @@
 import Link from "next/link";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type TransactionType = "income" | "expense";
 
@@ -66,6 +64,9 @@ function parseDateFilter(value: string) {
 export default async function FinancePage({
   searchParams,
 }: FinancePageProps) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const params = await searchParams;
 
   const keyword = String(params.q ?? "").trim();
@@ -93,7 +94,8 @@ export default async function FinancePage({
   const [transactions, projects] = await Promise.all([
     prisma.transactions.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
+        organization_id:
+          organizationId,
 
         ...(keyword
           ? {
@@ -227,8 +229,9 @@ export default async function FinancePage({
 
     prisma.projects.findMany({
       where: {
-        organization_id: ORGANIZATION_ID,
-      },
+        organization_id:
+            organizationId,
+        },
       select: {
         id: true,
         project_code: true,

@@ -3,10 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-
-const ORGANIZATION_ID =
-  "01aa8406-8a40-4228-8005-84d8ef986922";
 
 type MovementType =
   | "import"
@@ -102,6 +100,9 @@ function isDecreaseMovement(
 export async function createInventoryMovement(
   formData: FormData,
 ) {
+  const { organizationId } =
+    await requireCurrentUser();
+
   const productId = getText(
     formData,
     "product_id",
@@ -166,7 +167,7 @@ export async function createInventoryMovement(
           where: {
             id: productId,
             organization_id:
-              ORGANIZATION_ID,
+              organizationId,
             is_active: true,
           },
 
@@ -190,7 +191,7 @@ export async function createInventoryMovement(
             where: {
               id: projectId,
               organization_id:
-                ORGANIZATION_ID,
+                organizationId,
             },
 
             select: {
@@ -253,7 +254,7 @@ export async function createInventoryMovement(
       await transaction.inventory_movements.create({
         data: {
           organization_id:
-            ORGANIZATION_ID,
+            organizationId,
 
           product_id: product.id,
 
