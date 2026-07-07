@@ -444,10 +444,11 @@ export default async function FinancePage({
                   const type =
                     transaction.transaction_type as TransactionType;
 
-                  const customerName =
-                    transaction.customers?.company_name ||
-                    transaction.customers?.full_name ||
-                    "Không gắn khách hàng";
+                  const customerName = transaction.customers
+                    ? `${transaction.customers.customer_code} - ${
+                        transaction.customers.full_name
+                      }`
+                    : "Không gắn khách hàng";
 
                   return (
                     <tr
@@ -511,16 +512,11 @@ export default async function FinancePage({
                       </td>
 
                       <td className="px-4 py-4 text-sm text-slate-700">
-                        <p>{customerName}</p>
-
-                        {transaction.customers && (
-                          <p className="mt-1 text-xs text-slate-500">
-                            {
-                              transaction.customers
-                                .customer_code
-                            }
-                          </p>
-                        )}
+                        {transaction.customers
+                          ? `${transaction.customers.customer_code} - ${
+                              transaction.customers.full_name
+                            }`
+                          : "Không gắn khách hàng"}
                       </td>
 
                       <td className="px-4 py-4 text-sm text-slate-700">

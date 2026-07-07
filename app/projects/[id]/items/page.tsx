@@ -122,7 +122,6 @@ export default async function ProjectItemsPage({
     projectValue - totalCost;
 
   const customerName =
-    project.customers?.company_name ||
     project.customers?.full_name ||
     "Chưa chọn khách hàng";
 

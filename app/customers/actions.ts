@@ -293,3 +293,40 @@ export async function toggleCustomerActive(
 
   revalidatePath("/customers");
 }
+
+export async function deleteCustomer(id: string) {
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const customer =
+    await prisma.customers.findFirst({
+      where: {
+        id,
+        organization_id: organizationId,
+      },
+    });
+
+  if (!customer) {
+    throw new Error(
+      "Không tìm thấy khách hàng."
+    );
+  }
+
+  try {
+    await prisma.customers.delete({
+      where: {
+        id,
+      },
+    });
+  } catch {
+    throw new Error(
+      "Không thể xóa vì khách hàng đang được sử dụng trong dự án hoặc giao dịch."
+    );
+  }
+
+  revalidatePath("/customers");
+  revalidatePath("/");
+  revalidatePath("/reports");
+
+  redirect("/customers");
+}

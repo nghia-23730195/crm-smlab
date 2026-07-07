@@ -73,8 +73,7 @@ export default async function NewProjectPage() {
                     value={customer.id}
                   >
                     {customer.customer_code} -{" "}
-                    {customer.company_name ||
-                      customer.full_name}
+                    {customer.full_name}
                   </option>
                 ))}
               </select>

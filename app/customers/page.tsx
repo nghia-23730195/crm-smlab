@@ -3,6 +3,9 @@ import Link from "next/link";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
+import { deleteCustomer } from "./actions";
+import DeleteCustomerButton from "@/components/DeleteCustomerButton";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -187,6 +190,13 @@ export default async function CustomersPage({
         created_at: "desc",
       },
     });
+
+    console.log("Organization:", organizationId);
+      console.log("Customers:", customers.length);
+
+      customers.forEach((c) => {
+        console.log(c.customer_code, c.full_name);
+      });
 
   const hasFilters =
     keyword.length > 0 ||
@@ -430,12 +440,18 @@ export default async function CustomersPage({
                       </td>
 
                       <td className="px-4 py-4">
-                        <Link
-                          href={`/customers/${customer.id}/edit`}
-                          className="inline-flex rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
-                        >
-                          Sửa
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/customers/${customer.id}/edit`}
+                            className="inline-flex rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                          >
+                            Sửa
+                          </Link>
+
+                          <form action={deleteCustomer.bind(null, customer.id)}>
+                            <DeleteCustomerButton />
+                          </form>
+                        </div>
                       </td>
                     </tr>
                   );

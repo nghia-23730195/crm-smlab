@@ -114,8 +114,7 @@ export default async function EditProjectPage({
                     value={customer.id}
                   >
                     {customer.customer_code} -{" "}
-                    {customer.company_name ||
-                      customer.full_name}
+                    {customer.full_name}
                     {customer.status === "inactive"
                       ? " (Ngừng hoạt động)"
                       : ""}

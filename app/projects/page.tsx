@@ -253,8 +253,7 @@ export default async function ProjectsPage({
                   value={customer.id}
                 >
                   {customer.customer_code} -{" "}
-                  {customer.company_name ||
-                    customer.full_name}
+                  {customer.full_name}
                 </option>
               ))}
             </select>
@@ -386,7 +385,6 @@ export default async function ProjectsPage({
                     project.status as ProjectStatus;
 
                   const customerName =
-                    project.customers?.company_name ||
                     project.customers?.full_name ||
                     "Chưa chọn khách hàng";
 
