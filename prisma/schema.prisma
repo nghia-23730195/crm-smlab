@@ -650,7 +650,6 @@ model projects {
   start_date                              DateTime?             @db.Date
   due_date                                DateTime?             @db.Date
   completed_date                          DateTime?             @db.Date
-  estimated_value                         Decimal               @default(0) @db.Decimal(15, 2)
   actual_value                            Decimal               @default(0) @db.Decimal(15, 2)
   paid_amount                             Decimal               @default(0) @db.Decimal(15, 2)
   assigned_to                             String?               @db.Uuid

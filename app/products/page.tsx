@@ -1,9 +1,10 @@
 import Link from "next/link";
 
-import { requireCurrentUser } from "@/lib/auth/current-user";
-
+import DeleteProductButton from "@/components/DeleteProductButton";
 import ProductStatusToggle from "@/components/ProductStatusToggle";
+import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
+import { deleteProduct } from "./actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,8 @@ type ProductsPageProps = {
   searchParams: Promise<{
     q?: string;
     status?: string;
+    success?: string;
+    error?: string;
   }>;
 };
 
@@ -142,6 +145,30 @@ export default async function ProductsPage({
 
   return (
     <div className="p-5 md:p-8">
+      {params.success === "created" && (
+        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          Thêm sản phẩm thành công.
+        </div>
+      )}
+
+      {params.success === "updated" && (
+        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          Cập nhật sản phẩm thành công.
+        </div>
+      )}
+
+      {params.success === "deleted" && (
+        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          Xóa sản phẩm thành công.
+        </div>
+      )}
+
+      {params.error && (
+        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          {params.error}
+        </div>
+      )}
+
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -158,62 +185,134 @@ export default async function ProductsPage({
               </p>
             </div>
 
-            <form
-              action="/products"
-              method="GET"
-              className="flex w-full flex-col gap-3 lg:w-auto lg:flex-row"
-            >
-              <input
-                type="search"
-                name="q"
-                defaultValue={keyword}
-                placeholder="Tìm theo tên, mã hoặc danh mục..."
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 lg:w-80"
-              />
-
-              <select
-                name="status"
-                defaultValue={selectedStatus}
-                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Link
+                href="/products/new"
+                className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
               >
-                <option value="all">
-                  Tất cả trạng thái
-                </option>
-
-                <option value="in-stock">
-                  Còn hàng
-                </option>
-
-                <option value="low-stock">
-                  Sắp hết
-                </option>
-
-                <option value="out-of-stock">
-                  Hết hàng
-                </option>
-
-                <option value="inactive">
-                  Ngừng bán
-                </option>
-              </select>
-
-              <button
-                type="submit"
-                className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-              >
-                Tìm
-              </button>
-
-              {hasFilters && (
-                <Link
-                  href="/products"
-                  className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Xóa lọc
-                </Link>
-              )}
-            </form>
+                + Thêm sản phẩm
+              </Link>
+            </div>
           </div>
+
+          {/* Quick Filter Pills */}
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link
+              href={`/products?q=${encodeURIComponent(keyword)}&status=all`}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedStatus === "all"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              Tất cả ({allProducts.length})
+            </Link>
+
+            <Link
+              href={`/products?q=${encodeURIComponent(keyword)}&status=in-stock`}
+              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedStatus === "in-stock"
+                  ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                  : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+              }`}
+            >
+              ✅ Còn hàng
+            </Link>
+
+            <Link
+              href={`/products?q=${encodeURIComponent(keyword)}&status=low-stock`}
+              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedStatus === "low-stock"
+                  ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                  : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
+              }`}
+            >
+              ⚠️ Sắp hết
+            </Link>
+
+            <Link
+              href={`/products?q=${encodeURIComponent(keyword)}&status=out-of-stock`}
+              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedStatus === "out-of-stock"
+                  ? "bg-red-600 text-white border-red-600 shadow-xs"
+                  : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+              }`}
+            >
+              ⛔ Hết hàng
+            </Link>
+
+            <Link
+              href={`/products?q=${encodeURIComponent(keyword)}&status=inactive`}
+              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedStatus === "inactive"
+                  ? "bg-slate-700 text-white border-slate-700 shadow-xs"
+                  : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+              }`}
+            >
+              Ngừng bán
+            </Link>
+          </div>
+
+          <form
+            action="/products"
+            method="GET"
+            className="mt-4 flex w-full flex-col gap-3 lg:flex-row"
+          >
+            <input
+              type="hidden"
+              name="status"
+              value={selectedStatus}
+            />
+            <input
+              type="search"
+              name="q"
+              defaultValue={keyword}
+              placeholder="Tìm theo tên, mã hoặc danh mục..."
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 lg:w-80"
+            />
+
+            <select
+              name="status"
+              defaultValue={selectedStatus}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="all">
+                Tất cả trạng thái
+              </option>
+
+              <option value="in-stock">
+                Còn hàng
+              </option>
+
+              <option value="low-stock">
+                Sắp hết
+              </option>
+
+              <option value="out-of-stock">
+                Hết hàng
+              </option>
+
+              <option value="inactive">
+                Ngừng bán
+              </option>
+            </select>
+
+            <button
+              type="submit"
+              className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Tìm
+            </button>
+
+            {hasFilters && (
+              <Link
+                href="/products"
+                className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Xóa lọc
+              </Link>
+            )}
+          </form>
 
           {hasFilters && (
             <div className="mt-4 flex flex-wrap gap-2 text-xs">
@@ -243,18 +342,25 @@ export default async function ProductsPage({
               Hãy thử từ khóa khác hoặc xóa bộ lọc hiện tại.
             </p>
 
-            {hasFilters && (
+            {hasFilters ? (
               <Link
                 href="/products"
                 className="mt-5 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
               >
                 Xem tất cả sản phẩm
               </Link>
+            ) : (
+              <Link
+                href="/products/new"
+                className="mt-5 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Thêm sản phẩm đầu tiên
+              </Link>
             )}
           </div>
         ) : (
           <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[1080px] table-fixed">
+            <table className="w-full min-w-[1100px] table-fixed">
               <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
                 <tr>
                   <th className="w-[85px] px-3 py-4">
@@ -289,7 +395,7 @@ export default async function ProductsPage({
                     Trạng thái
                   </th>
 
-                  <th className="w-[175px] px-3 py-4">
+                  <th className="w-[210px] px-3 py-4">
                     Thao tác
                   </th>
                 </tr>
@@ -380,10 +486,10 @@ export default async function ProductsPage({
                       </td>
 
                       <td className="px-3 py-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <Link
                             href={`/products/${product.id}/edit`}
-                            className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                            className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
                           >
                             Sửa
                           </Link>
@@ -393,6 +499,10 @@ export default async function ProductsPage({
                             productName={product.name}
                             isActive={product.is_active}
                           />
+
+                          <form action={deleteProduct.bind(null, product.id)}>
+                            <DeleteProductButton />
+                          </form>
                         </div>
                       </td>
                     </tr>

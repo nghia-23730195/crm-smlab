@@ -191,15 +191,6 @@ export default async function EditProjectPage({
             />
 
             <FormField
-              label="Giá trị dự kiến"
-              name="estimated_value"
-              type="number"
-              min="0"
-              step="1000"
-              defaultValue={project.estimated_value.toString()}
-            />
-
-            <FormField
               label="Giá trị thực tế"
               name="actual_value"
               type="number"

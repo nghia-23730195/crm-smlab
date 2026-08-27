@@ -199,8 +199,7 @@ export default async function NewTransactionPage() {
                     value={customer.id}
                   >
                     {customer.customer_code} -{" "}
-                    {customer.company_name ||
-                      customer.full_name}
+                    {customer.full_name}
                   </option>
                 ))}
               </select>
@@ -239,12 +238,10 @@ export default async function NewTransactionPage() {
               Hủy
             </Link>
 
-            <button
-              type="submit"
-              className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
-              Thêm giao dịch
-            </button>
+            <SubmitButton
+              idleText="Thêm giao dịch"
+              pendingText="Đang thêm..."
+            />
           </div>
         </form>
       </div>

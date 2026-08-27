@@ -81,11 +81,6 @@ function getProjectData(formData: FormData) {
     getText(formData, "completed_date"),
   );
 
-  const estimatedValue = parseMoney(
-    getText(formData, "estimated_value"),
-    "Giá trị dự kiến",
-  );
-
   const actualValue = parseMoney(
     getText(formData, "actual_value"),
     "Giá trị thực tế",
@@ -134,7 +129,6 @@ function getProjectData(formData: FormData) {
     startDate,
     dueDate,
     completedDate,
-    estimatedValue,
     actualValue,
     paidAmount,
   };
@@ -200,7 +194,6 @@ export async function createProject(
         data.status === "completed"
           ? data.completedDate ?? new Date()
           : data.completedDate,
-      estimated_value: data.estimatedValue,
       actual_value: data.actualValue,
       paid_amount: data.paidAmount,
       assigned_to: null,
@@ -209,9 +202,10 @@ export async function createProject(
   });
 
   revalidatePath("/projects");
+  revalidatePath("/reports");
   revalidatePath("/");
 
-  redirect("/projects");
+  redirect("/projects?success=created");
 }
 
 export async function updateProject(
@@ -297,7 +291,6 @@ export async function updateProject(
         data.status === "completed"
           ? data.completedDate ?? new Date()
           : data.completedDate,
-      estimated_value: data.estimatedValue,
       actual_value: data.actualValue,
       paid_amount: data.paidAmount,
       updated_at: new Date(),
@@ -306,9 +299,10 @@ export async function updateProject(
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${projectId}/edit`);
+  revalidatePath("/reports");
   revalidatePath("/");
 
-  redirect("/projects");
+  redirect("/projects?success=updated");
 }
 
 export async function changeProjectStatus(
@@ -357,5 +351,59 @@ export async function changeProjectStatus(
   });
 
   revalidatePath("/projects");
+  revalidatePath("/reports");
   revalidatePath("/");
+}
+
+export async function deleteProject(projectId: string) {
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const project = await prisma.projects.findFirst({
+    where: {
+      id: projectId,
+      organization_id: organizationId,
+    },
+    include: {
+      _count: {
+        select: {
+          transactions: true,
+          inventoryMovements: true,
+        },
+      },
+    },
+  });
+
+  if (!project) {
+    throw new Error("Không tìm thấy dự án.");
+  }
+
+  if (
+    project._count.transactions > 0 ||
+    project._count.inventoryMovements > 0
+  ) {
+    throw new Error(
+      "Không thể xóa dự án đã có giao dịch tài chính hoặc phiếu xuất kho. Hãy đổi trạng thái sang 'Đã hủy'.",
+    );
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.project_items.deleteMany({
+      where: {
+        project_id: projectId,
+      },
+    });
+
+    await tx.projects.delete({
+      where: {
+        id: projectId,
+      },
+    });
+  });
+
+  revalidatePath("/projects");
+  revalidatePath("/reports");
+  revalidatePath("/");
+
+  redirect("/projects?success=deleted");
 }

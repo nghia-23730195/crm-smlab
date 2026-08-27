@@ -25,7 +25,7 @@ export default async function NewProjectPage() {
       company_name: true,
     },
     orderBy: {
-      full_name: "asc",
+      customer_code: "asc",
     },
   });
 
@@ -134,24 +134,6 @@ export default async function NewProjectPage() {
               label="Ngày hoàn thành"
               name="completed_date"
               type="date"
-            />
-
-            <FormField
-              label="Giá trị dự kiến"
-              name="estimated_value"
-              type="number"
-              min="0"
-              step="1000"
-              defaultValue="0"
-            />
-
-            <FormField
-              label="Giá trị thực tế"
-              name="actual_value"
-              type="number"
-              min="0"
-              step="1000"
-              defaultValue="0"
             />
 
             <FormField

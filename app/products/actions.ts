@@ -128,7 +128,10 @@ export async function createProduct(
   });
 
   revalidatePath("/products");
-  redirect("/products");
+  revalidatePath("/inventory");
+  revalidatePath("/");
+
+  redirect("/products?success=created");
 }
 
 export async function updateProduct(
@@ -200,8 +203,10 @@ export async function updateProduct(
   revalidatePath(
     `/products/${productId}/edit`,
   );
+  revalidatePath("/inventory");
+  revalidatePath("/");
 
-  redirect("/products");
+  redirect("/products?success=updated");
 }
 
 export async function toggleProductActive(
@@ -238,4 +243,52 @@ export async function toggleProductActive(
   });
 
   revalidatePath("/products");
+  revalidatePath("/inventory");
+  revalidatePath("/");
+}
+
+export async function deleteProduct(productId: string) {
+  const { organizationId } =
+    await requireCurrentUser();
+
+  const product =
+    await prisma.products.findFirst({
+      where: {
+        id: productId,
+        organization_id: organizationId,
+      },
+      include: {
+        _count: {
+          select: {
+            project_items: true,
+            inventoryMovements: true,
+          },
+        },
+      },
+    });
+
+  if (!product) {
+    throw new Error("Không tìm thấy sản phẩm.");
+  }
+
+  if (
+    product._count.project_items > 0 ||
+    product._count.inventoryMovements > 0
+  ) {
+    throw new Error(
+      "Không thể xóa sản phẩm đã phát sinh lịch sử kho hoặc dự án. Hãy chuyển sang trạng thái 'Ngừng bán'.",
+    );
+  }
+
+  await prisma.products.delete({
+    where: {
+      id: productId,
+    },
+  });
+
+  revalidatePath("/products");
+  revalidatePath("/inventory");
+  revalidatePath("/");
+
+  redirect("/products?success=deleted");
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import ExportCsvButton from "@/components/ExportCsvButton";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
@@ -278,6 +279,35 @@ export default async function InventoryPage({
     selectedStatus !== "all" ||
     selectedCategory !== "all";
 
+  const csvHeaders = [
+    "Mã linh kiện",
+    "Tên linh kiện",
+    "Danh mục",
+    "Đơn vị",
+    "Số lượng tồn",
+    "Tồn tối thiểu",
+    "Giá nhập (VNĐ)",
+    "Giá bán (VNĐ)",
+    "Tổng giá trị tồn (VNĐ)",
+  ];
+
+  const csvRows = products.map((p) => {
+    const stock = Number(p.stock_quantity ?? 0);
+    const cost = Number(p.cost_price ?? 0);
+    const total = stock * cost;
+    return [
+      p.product_code,
+      p.name,
+      p.category || "",
+      p.unit,
+      stock,
+      Number(p.minimum_stock ?? 0),
+      cost,
+      Number(p.sale_price ?? 0),
+      total,
+    ];
+  });
+
   return (
     <div className="p-5 md:p-8">
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -329,28 +359,86 @@ export default async function InventoryPage({
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <ExportCsvButton
+                filename="danh-sach-kho-linh-kien-smlab"
+                headers={csvHeaders}
+                rows={csvRows}
+              />
+
               <Link
                 href="/inventory/movements"
-                className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                className="rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2.5 text-xs font-bold text-blue-700 transition hover:bg-blue-100"
               >
                 Lịch sử nhập xuất
               </Link>
 
               <Link
                 href="/inventory/movements/new"
-                className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-blue-700"
               >
                 + Tạo phiếu kho
               </Link>
             </div>
           </div>
 
+          {/* Quick Filter Pills */}
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link
+              href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=all`}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedStatus === "all"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              Tất cả ({totalProductTypes})
+            </Link>
+
+            <Link
+              href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=low_stock`}
+              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedStatus === "low_stock"
+                  ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                  : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
+              }`}
+            >
+              ⚠️ Sắp hết ({lowStockCount})
+            </Link>
+
+            <Link
+              href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=out_of_stock`}
+              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedStatus === "out_of_stock"
+                  ? "bg-red-600 text-white border-red-600 shadow-xs"
+                  : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+              }`}
+            >
+              ⛔ Hết hàng ({outOfStockCount})
+            </Link>
+
+            <Link
+              href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=available`}
+              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedStatus === "available"
+                  ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                  : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+              }`}
+            >
+              ✅ Còn hàng ({totalProductTypes - lowStockCount - outOfStockCount})
+            </Link>
+          </div>
+
           <form
             action="/inventory"
             method="GET"
-            className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_200px_180px_auto_auto]"
+            className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_200px_180px_auto_auto]"
           >
+            <input
+              type="hidden"
+              name="status"
+              value={selectedStatus}
+            />
             <input
               type="search"
               name="q"

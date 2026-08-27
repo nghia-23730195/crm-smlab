@@ -330,3 +330,31 @@ export async function deleteCustomer(id: string) {
 
   redirect("/customers");
 }
+
+export async function changeCustomerStatus(
+  customerId: string,
+  newStatus: CustomerStatus,
+) {
+  const { organizationId } =
+    await requireCurrentUser();
+
+  if (!VALID_STATUSES.includes(newStatus)) {
+    throw new Error("Trạng thái khách hàng không hợp lệ.");
+  }
+
+  await prisma.customers.updateMany({
+    where: {
+      id: customerId,
+      organization_id: organizationId,
+    },
+    data: {
+      status: newStatus,
+      updated_at: new Date(),
+    },
+  });
+
+  revalidatePath("/customers");
+  revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/reports");
+  revalidatePath("/");
+}

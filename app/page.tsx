@@ -31,12 +31,12 @@ const projectStatusLabels: Record<ProjectStatus, string> = {
 };
 
 const projectStatusClasses: Record<ProjectStatus, string> = {
-  draft: "bg-slate-100 text-slate-700",
-  planning: "bg-violet-100 text-violet-700",
-  in_progress: "bg-blue-100 text-blue-700",
-  waiting: "bg-amber-100 text-amber-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  cancelled: "bg-red-100 text-red-700",
+  draft: "bg-slate-100 text-slate-700 border-slate-200",
+  planning: "bg-violet-100 text-violet-700 border-violet-200",
+  in_progress: "bg-blue-100 text-blue-700 border-blue-200",
+  waiting: "bg-amber-100 text-amber-800 border-amber-200",
+  completed: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  cancelled: "bg-red-100 text-red-700 border-red-200",
 };
 
 function formatCurrency(value: unknown) {
@@ -56,6 +56,7 @@ function formatDate(value: Date | null) {
 
   return new Intl.DateTimeFormat("vi-VN", {
     timeZone: "UTC",
+    dateStyle: "medium",
   }).format(value);
 }
 
@@ -149,7 +150,7 @@ export default async function DashboardPage() {
     activeProducts,
     productsForStock,
     activeProjects,
-    projectsDueSoon,
+    projectsDueSoonList,
     currentMonthTransactions,
     previousMonthIncomeTransactions,
     sixMonthTransactions,
@@ -188,8 +189,12 @@ export default async function DashboardPage() {
         is_active: true,
       },
       select: {
+        id: true,
+        product_code: true,
+        name: true,
         stock_quantity: true,
         minimum_stock: true,
+        cost_price: true,
       },
     }),
 
@@ -206,7 +211,7 @@ export default async function DashboardPage() {
       },
     }),
 
-    prisma.projects.count({
+    prisma.projects.findMany({
       where: {
         organization_id: organizationId,
         due_date: {
@@ -217,6 +222,13 @@ export default async function DashboardPage() {
           notIn: ["completed", "cancelled"],
         },
       },
+      select: {
+        id: true,
+        project_code: true,
+        project_name: true,
+        due_date: true,
+      },
+      take: 3,
     }),
 
     prisma.transactions.findMany({
@@ -268,6 +280,9 @@ export default async function DashboardPage() {
     prisma.projects.findMany({
       where: {
         organization_id: organizationId,
+        status: {
+          not: "cancelled",
+        },
       },
       select: {
         actual_value: true,
@@ -282,26 +297,40 @@ export default async function DashboardPage() {
       include: {
         customers: {
           select: {
+            id: true,
+            customer_code: true,
             full_name: true,
             company_name: true,
+          },
+        },
+        _count: {
+          select: {
+            project_items: true,
           },
         },
       },
       orderBy: {
         created_at: "desc",
       },
-      take: 5,
+      take: 6,
     }),
   ]);
 
-  const lowStockProducts = productsForStock.filter(
-    (product) => {
-      const stock = Number(product.stock_quantity);
-      const minimum = Number(product.minimum_stock);
+  const lowStockItems = productsForStock.filter((product) => {
+    const stock = Number(product.stock_quantity);
+    const minimum = Number(product.minimum_stock);
+    return stock > 0 && stock <= minimum;
+  });
 
-      return stock > 0 && stock <= minimum;
-    },
-  ).length;
+  const outOfStockItems = productsForStock.filter((product) => {
+    const stock = Number(product.stock_quantity);
+    return stock === 0;
+  });
+
+  const totalInventoryValue = productsForStock.reduce(
+    (sum, p) => sum + Number(p.stock_quantity) * Number(p.cost_price),
+    0,
+  );
 
   const currentIncome = currentMonthTransactions
     .filter(
@@ -340,13 +369,6 @@ export default async function DashboardPage() {
           previousIncome) *
         100
       : null;
-
-  const revenueChangeLabel =
-    revenueChange === null
-      ? "Chưa có dữ liệu tháng trước"
-      : `${revenueChange >= 0 ? "+" : ""}${revenueChange.toFixed(
-          1,
-        )}% so với tháng trước`;
 
   const chartMap = new Map(
     recentMonths.map((month) => [month.key, month]),
@@ -388,104 +410,238 @@ export default async function DashboardPage() {
     0,
   );
 
-  const statistics = [
-    {
-      title: "Tổng khách hàng",
-      value: totalCustomers.toString(),
-      description: `+${newCustomersThisMonth} khách hàng trong tháng`,
-    },
-    {
-      title: "Tổng sản phẩm",
-      value: activeProducts.toString(),
-      description: `${lowStockProducts} sản phẩm sắp hết`,
-    },
-    {
-      title: "Dự án đang thực hiện",
-      value: activeProjects.toString(),
-      description: `${projectsDueSoon} dự án sắp đến hạn`,
-    },
-    {
-      title: "Doanh thu tháng",
-      value: formatCurrency(currentIncome),
-      description: revenueChangeLabel,
-    },
-  ];
-
   return (
-    <div className="p-5 md:p-8">
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {statistics.map((item) => (
-          <article
-            key={item.title}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <p className="text-sm font-medium text-slate-500">
-              {item.title}
-            </p>
-
-            <p className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-              {item.value}
-            </p>
-
-            <p className="mt-3 text-xs text-slate-500">
-              {item.description}
-            </p>
-          </article>
-        ))}
-      </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+    <div className="p-5 md:p-8 space-y-6">
+      {/* 1. Quick Action Header */}
+      <section className="rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 p-6 text-white shadow-sm">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">
-              Doanh thu và chi phí
-            </h3>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Thống kê 6 tháng gần nhất
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur-xs">
+              ⚡ Trung tâm điều hành
+            </span>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight">
+              Chào mừng trở lại SM-LAB CRM
+            </h1>
+            <p className="mt-1 text-sm text-blue-100">
+              Quản lý nhanh khách hàng, dự án, kho hàng và dòng tiền trong một giao diện
             </p>
           </div>
 
-          <div className="mt-8 flex h-64 items-end gap-4 overflow-x-auto border-b border-l border-slate-200 px-4 pb-4">
+          {/* 4 Quick Actions */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              href="/customers/new"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 active:scale-95"
+            >
+              <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              + Khách hàng
+            </Link>
+
+            <Link
+              href="/projects/new"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 active:scale-95"
+            >
+              <svg className="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              + Tạo dự án
+            </Link>
+
+            <Link
+              href="/inventory/movements/new"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 active:scale-95"
+            >
+              <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              + Phiếu kho
+            </Link>
+
+            <Link
+              href="/finance/new"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 active:scale-95"
+            >
+              <svg className="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              + Thu / Chi
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. Smart Operational Alerts */}
+      {(lowStockItems.length > 0 || outOfStockItems.length > 0 || projectsDueSoonList.length > 0) && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {(lowStockItems.length > 0 || outOfStockItems.length > 0) && (
+            <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-amber-900 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Cảnh báo tồn kho</p>
+                  <p className="text-xs text-amber-700">
+                    {outOfStockItems.length > 0 && `${outOfStockItems.length} mặt hàng hết `}
+                    {lowStockItems.length > 0 && `${lowStockItems.length} mặt hàng sắp hết`}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/inventory"
+                className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-amber-700"
+              >
+                Kiểm tra kho →
+              </Link>
+            </div>
+          )}
+
+          {projectsDueSoonList.length > 0 && (
+            <div className="flex items-center justify-between rounded-2xl border border-blue-200 bg-blue-50/80 p-4 text-blue-900 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Dự án sắp đến hạn</p>
+                  <p className="text-xs text-blue-700">
+                    {projectsDueSoonList.length} dự án cần bàn giao trong 7 ngày tới
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/projects"
+                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-700"
+              >
+                Xem tiến độ →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 3. Modern KPI Cards */}
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          title="Khách hàng hoạt động"
+          value={totalCustomers.toString()}
+          subtext={`+${newCustomersThisMonth} khách mới tháng này`}
+          href="/customers"
+          iconColor="bg-blue-50 text-blue-600 border-blue-100"
+          icon={(
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          )}
+        />
+
+        <KpiCard
+          title="Sản phẩm & Vốn tồn"
+          value={activeProducts.toString()}
+          subtext={`Vốn tồn: ${formatCurrency(totalInventoryValue)}`}
+          href="/inventory"
+          iconColor="bg-purple-50 text-purple-600 border-purple-100"
+          icon={(
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          )}
+        />
+
+        <KpiCard
+          title="Dự án đang thực hiện"
+          value={activeProjects.toString()}
+          subtext={`Công nợ: ${formatCurrency(totalDebt)}`}
+          href="/projects"
+          iconColor="bg-amber-50 text-amber-600 border-amber-100"
+          icon={(
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          )}
+        />
+
+        <KpiCard
+          title="Doanh thu tháng này"
+          value={formatCurrency(currentIncome)}
+          subtext={
+            revenueChange !== null
+              ? `${revenueChange >= 0 ? "+" : ""}${revenueChange.toFixed(1)}% so với tháng trước`
+              : "Lợi nhuận: " + formatCurrency(currentProfit)
+          }
+          href="/finance"
+          iconColor="bg-emerald-50 text-emerald-600 border-emerald-100"
+          icon={(
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+        />
+      </div>
+
+      {/* 4. Chart & Financial Breakdown */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">
+                Biểu đồ Doanh thu & Chi phí
+              </h3>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Diễn biến thu chi trong 6 tháng gần nhất
+              </p>
+            </div>
+
+            <Link
+              href="/reports"
+              className="text-xs font-semibold text-blue-600 transition hover:text-blue-700"
+            >
+              Báo cáo chi tiết →
+            </Link>
+          </div>
+
+          <div className="mt-8 flex h-64 items-end gap-3 sm:gap-4 overflow-x-auto border-b border-l border-slate-200 px-4 pb-4">
             {chartData.map((item) => {
               const incomeHeight = Math.max(
                 item.income > 0 ? 8 : 0,
-                (item.income / maximumChartValue) * 190,
+                (item.income / maximumChartValue) * 185,
               );
 
               const expenseHeight = Math.max(
                 item.expense > 0 ? 8 : 0,
-                (item.expense / maximumChartValue) * 190,
+                (item.expense / maximumChartValue) * 185,
               );
 
               return (
                 <div
                   key={item.key}
-                  className="flex min-w-16 flex-1 flex-col items-center justify-end gap-3"
+                  className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"
                 >
-                  <div className="flex h-48 w-full items-end justify-center gap-2">
+                  <div className="flex h-48 w-full items-end justify-center gap-1.5 sm:gap-2">
                     <div
-                      title={`Doanh thu: ${formatCurrency(
-                        item.income,
-                      )}`}
-                      className="w-5 rounded-t-md bg-blue-600"
+                      title={`Thu: ${formatCurrency(item.income)}`}
+                      className="w-4 sm:w-6 rounded-t-md bg-blue-600 transition hover:brightness-110"
                       style={{
                         height: `${incomeHeight}px`,
                       }}
                     />
 
                     <div
-                      title={`Chi phí: ${formatCurrency(
-                        item.expense,
-                      )}`}
-                      className="w-5 rounded-t-md bg-slate-300"
+                      title={`Chi: ${formatCurrency(item.expense)}`}
+                      className="w-4 sm:w-6 rounded-t-md bg-slate-300 transition hover:brightness-110"
                       style={{
                         height: `${expenseHeight}px`,
                       }}
                     />
                   </div>
 
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs font-semibold text-slate-600">
                     {item.label}
                   </span>
                 </div>
@@ -493,100 +649,108 @@ export default async function DashboardPage() {
             })}
           </div>
 
-          <div className="mt-5 flex gap-6 text-sm">
-            <Legend
-              label="Doanh thu"
-              className="bg-blue-600"
-            />
+          <div className="mt-5 flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex gap-6">
+              <Legend label="Doanh thu" className="bg-blue-600" />
+              <Legend label="Chi phí" className="bg-slate-300" />
+            </div>
 
-            <Legend
-              label="Chi phí"
-              className="bg-slate-300"
-            />
+            <span className="text-xs text-slate-500 font-medium">
+              Đơn vị: VNĐ
+            </span>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-900">
-            Tổng quan tài chính
-          </h3>
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">
+              Sổ quỹ tháng này
+            </h3>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Cân đối thu chi và lợi nhuận ròng
+            </p>
+          </div>
 
-          <div className="mt-6 space-y-5">
+          <div className="mt-6 space-y-4">
             <FinancialRow
-              label="Doanh thu"
+              label="Tổng khoản thu"
               value={formatCurrency(currentIncome)}
               valueClassName="text-emerald-700"
             />
 
             <FinancialRow
-              label="Chi phí"
+              label="Tổng khoản chi"
               value={formatCurrency(currentExpense)}
               valueClassName="text-red-700"
             />
 
             <FinancialRow
-              label="Lợi nhuận"
+              label="Lợi nhuận ròng"
               value={formatCurrency(currentProfit)}
               valueClassName={
                 currentProfit >= 0
-                  ? "text-blue-700"
-                  : "text-red-700"
+                  ? "text-blue-700 text-lg font-extrabold"
+                  : "text-red-700 text-lg font-extrabold"
               }
             />
 
             <FinancialRow
-              label="Công nợ"
+              label="Công nợ chưa thu"
               value={formatCurrency(totalDebt)}
               valueClassName="text-amber-700"
             />
           </div>
+
+          <Link
+            href="/finance"
+            className="mt-6 block w-full rounded-xl bg-slate-100 py-3 text-center text-xs font-bold text-slate-800 transition hover:bg-slate-200"
+          >
+            Mở sổ quỹ tài chính →
+          </Link>
         </section>
       </div>
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      {/* 5. Recent Projects Table */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
           <div>
             <h3 className="text-lg font-bold text-slate-900">
               Dự án gần đây
             </h3>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Theo dõi các dự án mới nhất trong hệ thống
+            <p className="mt-0.5 text-xs text-slate-500">
+              Theo dõi tình trạng thực hiện và thanh toán dự án
             </p>
           </div>
 
           <Link
             href="/projects"
-            className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+            className="text-xs font-semibold text-blue-600 transition hover:text-blue-700"
           >
-            Xem tất cả
+            Xem tất cả dự án →
           </Link>
         </div>
 
         {recentProjects.length === 0 ? (
-          <div className="p-10 text-center text-sm text-slate-500">
-            Chưa có dự án nào.
+          <div className="p-12 text-center">
+            <p className="text-sm text-slate-500">Chưa có dự án nào.</p>
+            <Link
+              href="/projects/new"
+              className="mt-3 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700"
+            >
+              + Tạo dự án đầu tiên
+            </Link>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+            <table className="w-full min-w-[900px] text-left">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                 <tr>
-                  <th className="px-6 py-4">
-                    Tên dự án
-                  </th>
-
-                  <th className="px-6 py-4">
-                    Khách hàng
-                  </th>
-
-                  <th className="px-6 py-4">
-                    Hạn hoàn thành
-                  </th>
-
-                  <th className="px-6 py-4">
-                    Trạng thái
-                  </th>
+                  <th className="px-6 py-4">Mã & Tên dự án</th>
+                  <th className="px-6 py-4">Khách hàng</th>
+                  <th className="px-6 py-4">Hạn hoàn thành</th>
+                  <th className="px-6 py-4">Tiến độ thanh toán</th>
+                  <th className="px-6 py-4">Trạng thái</th>
+                  <th className="px-6 py-4 text-right">Chi tiết</th>
                 </tr>
               </thead>
 
@@ -598,25 +762,40 @@ export default async function DashboardPage() {
                   const customerName =
                     project.customers?.company_name ||
                     project.customers?.full_name ||
-                    "Chưa chọn khách hàng";
+                    "Chưa chọn";
+
+                  const actualVal = Number(project.actual_value ?? 0);
+                  const paidVal = Number(project.paid_amount ?? 0);
+                  const percentPaid = actualVal > 0 ? Math.min(100, Math.round((paidVal / actualVal) * 100)) : 0;
 
                   return (
                     <tr
                       key={project.id}
-                      className="hover:bg-slate-50"
+                      className="bg-white transition hover:bg-slate-50"
                     >
                       <td className="px-6 py-4">
-                        <p className="font-semibold text-slate-900">
+                        <Link
+                          href={`/projects/${project.id}/items`}
+                          className="font-bold text-slate-900 hover:text-blue-600"
+                        >
                           {project.project_name}
-                        </p>
-
-                        <p className="mt-1 text-xs text-slate-500">
-                          {project.project_code}
+                        </Link>
+                        <p className="mt-0.5 text-xs font-semibold text-blue-600">
+                          {project.project_code} • {project._count.project_items} linh kiện
                         </p>
                       </td>
 
-                      <td className="px-6 py-4 text-sm text-slate-600">
-                        {customerName}
+                      <td className="px-6 py-4 text-sm text-slate-700">
+                        {project.customers ? (
+                          <Link
+                            href={`/customers/${project.customers.id}`}
+                            className="font-medium text-slate-900 hover:text-blue-600 hover:underline"
+                          >
+                            {customerName}
+                          </Link>
+                        ) : (
+                          <span className="text-slate-400">Không gắn khách</span>
+                        )}
                       </td>
 
                       <td className="px-6 py-4 text-sm text-slate-600">
@@ -624,13 +803,37 @@ export default async function DashboardPage() {
                       </td>
 
                       <td className="px-6 py-4">
+                        <div className="w-36">
+                          <div className="flex justify-between text-xs font-semibold mb-1">
+                            <span className="text-emerald-700">{formatCurrency(paidVal)}</span>
+                            <span className="text-slate-500">{percentPaid}%</span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+                            <div
+                              className="h-full bg-emerald-500 rounded-full transition-all"
+                              style={{ width: `${percentPaid}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4">
                         <span
-                          className={`inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
+                          className={`inline-flex whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold ${
                             projectStatusClasses[status]
                           }`}
                         >
                           {projectStatusLabels[status]}
                         </span>
+                      </td>
+
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          href={`/projects/${project.id}/items`}
+                          className="inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                        >
+                          Linh kiện →
+                        </Link>
                       </td>
                     </tr>
                   );
@@ -644,24 +847,64 @@ export default async function DashboardPage() {
   );
 }
 
-type FinancialRowProps = {
-  label: string;
+function KpiCard({
+  title,
+  value,
+  subtext,
+  href,
+  icon,
+  iconColor,
+}: {
+  title: string;
   value: string;
-  valueClassName: string;
-};
+  subtext: string;
+  href: string;
+  icon: React.ReactNode;
+  iconColor: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md"
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            {title}
+          </p>
+          <p className="mt-3 text-2xl font-bold tracking-tight text-slate-900 group-hover:text-blue-600 transition">
+            {value}
+          </p>
+        </div>
+
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${iconColor}`}>
+          {icon}
+        </div>
+      </div>
+
+      <p className="mt-3 text-xs font-medium text-slate-500">
+        {subtext}
+      </p>
+    </Link>
+  );
+}
 
 function FinancialRow({
   label,
   value,
   valueClassName,
-}: FinancialRowProps) {
+}: {
+  label: string;
+  value: string;
+  valueClassName: string;
+}) {
   return (
-    <div className="flex items-center justify-between border-b border-slate-100 pb-4 last:border-0">
-      <span className="text-sm text-slate-500">
+    <div className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+      <span className="text-sm font-medium text-slate-600">
         {label}
       </span>
 
-      <span className={`font-bold ${valueClassName}`}>
+      <span className={`text-sm font-bold ${valueClassName}`}>
         {value}
       </span>
     </div>
@@ -677,10 +920,8 @@ function Legend({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span
-        className={`h-3 w-3 rounded ${className}`}
-      />
-      <span>{label}</span>
+      <span className={`h-3 w-3 rounded-sm ${className}`} />
+      <span className="text-slate-700 font-medium">{label}</span>
     </div>
   );
 }

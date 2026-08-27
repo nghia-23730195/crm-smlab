@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import DeleteProjectItemButton from "@/components/DeleteProjectItemButton";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
@@ -114,14 +115,13 @@ export default async function ProjectItemsPage({
     );
 
   const projectValue =
-    Number(project.actual_value) > 0
-      ? Number(project.actual_value)
-      : Number(project.estimated_value);
+    Number(project.actual_value ?? 0);
 
   const expectedProfit =
     projectValue - totalCost;
 
   const customerName =
+    project.customers?.company_name ||
     project.customers?.full_name ||
     "Chưa chọn khách hàng";
 
@@ -170,6 +170,14 @@ export default async function ProjectItemsPage({
               </p>
             </div>
 
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href={`/projects/${project.id}/items/new`}
+                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                + Thêm linh kiện
+              </Link>
+            </div>
           </div>
 
           {project.project_items.length === 0 ? (
@@ -186,7 +194,7 @@ export default async function ProjectItemsPage({
                 href={`/projects/${project.id}/items/new`}
                 className="mt-5 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
               >
-                Thêm linh kiện
+                + Thêm linh kiện
               </Link>
             </div>
           ) : (
@@ -265,8 +273,8 @@ export default async function ProjectItemsPage({
                                 {
                                   item.products
                                     .product_code
-                                }{" "}
-                                — {item.products.name}
+                                }{ " — " }
+                                {item.products.name}
                               </p>
                             )}
                           </td>
@@ -343,12 +351,7 @@ export default async function ProjectItemsPage({
                                   item.id,
                                 )}
                               >
-                                <button
-                                  type="submit"
-                                  className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
-                                >
-                                  Xóa
-                                </button>
+                                <DeleteProjectItemButton />
                               </form>
                             </div>
                           </td>

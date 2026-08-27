@@ -271,12 +271,10 @@ export default async function EditTransactionPage({
               Hủy
             </Link>
 
-            <button
-              type="submit"
-              className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
-              Lưu thay đổi
-            </button>
+            <SubmitButton
+              idleText="Lưu thay đổi"
+              pendingText="Đang lưu..."
+            />
           </div>
         </form>
       </div>

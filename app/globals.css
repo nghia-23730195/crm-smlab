@@ -16,17 +16,21 @@ body {
   margin: 0;
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 button,
 input,
 select,
 textarea {
-  font: inherit;
+  font-family: inherit;
   color: #0f172a;
 }
 
@@ -34,4 +38,9 @@ input::placeholder,
 textarea::placeholder {
   color: #94a3b8;
   opacity: 1;
+}
+
+/* Tabular numbers for financial and date alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }

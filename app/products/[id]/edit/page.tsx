@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { requireCurrentUser } from "@/lib/auth/current-user";
+import SubmitButton from "@/components/SubmitButton";
 
 import { prisma } from "@/lib/prisma";
 import { updateProduct } from "../../actions";
@@ -173,12 +174,10 @@ export default async function EditProductPage({
               Hủy
             </Link>
 
-            <button
-              type="submit"
-              className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
-              Lưu thay đổi
-            </button>
+            <SubmitButton
+              idleText="Lưu thay đổi"
+              pendingText="Đang lưu..."
+            />
           </div>
         </form>
       </div>
