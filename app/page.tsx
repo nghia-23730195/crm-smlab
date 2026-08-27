@@ -1,18 +1,13 @@
 import Link from "next/link";
 
+import DeadlineBadge from "@/components/DeadlineBadge";
+import ProjectStatusSelect from "@/components/ProjectStatusSelect";
 import { requireCurrentUser } from "@/lib/auth/current-user";
+import { formatProjectTitle } from "@/lib/formatters";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type ProjectStatus =
-  | "draft"
-  | "planning"
-  | "in_progress"
-  | "waiting"
-  | "completed"
-  | "cancelled";
 
 type ChartMonth = {
   key: string;
@@ -21,23 +16,7 @@ type ChartMonth = {
   expense: number;
 };
 
-const projectStatusLabels: Record<ProjectStatus, string> = {
-  draft: "Nháp",
-  planning: "Đang chuẩn bị",
-  in_progress: "Đang thực hiện",
-  waiting: "Chờ khách hàng",
-  completed: "Hoàn thành",
-  cancelled: "Đã hủy",
-};
 
-const projectStatusClasses: Record<ProjectStatus, string> = {
-  draft: "bg-slate-100 text-slate-700 border-slate-200",
-  planning: "bg-violet-100 text-violet-700 border-violet-200",
-  in_progress: "bg-blue-100 text-blue-700 border-blue-200",
-  waiting: "bg-amber-100 text-amber-800 border-amber-200",
-  completed: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  cancelled: "bg-red-100 text-red-700 border-red-200",
-};
 
 function formatCurrency(value: unknown) {
   const amount = Number(value ?? 0);
@@ -742,23 +721,20 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+            <table className="w-full min-w-[1000px] text-left">
+              <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-4">Mã & Tên dự án</th>
-                  <th className="px-6 py-4">Khách hàng</th>
-                  <th className="px-6 py-4">Hạn hoàn thành</th>
-                  <th className="px-6 py-4">Tiến độ thanh toán</th>
-                  <th className="px-6 py-4">Trạng thái</th>
-                  <th className="px-6 py-4 text-right">Chi tiết</th>
+                  <th className="px-5 py-3.5">Mã & Tên dự án</th>
+                  <th className="px-5 py-3.5">Khách hàng</th>
+                  <th className="px-5 py-3.5">Hạn hoàn thành & Deadline</th>
+                  <th className="px-5 py-3.5">Tiến độ thanh toán</th>
+                  <th className="px-5 py-3.5">Trạng thái</th>
+                  <th className="px-5 py-3.5 text-right">Thao tác</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-slate-200">
                 {recentProjects.map((project) => {
-                  const status =
-                    project.status as ProjectStatus;
-
                   const customerName =
                     project.customers?.company_name ||
                     project.customers?.full_name ||
@@ -771,42 +747,55 @@ export default async function DashboardPage() {
                   return (
                     <tr
                       key={project.id}
-                      className="bg-white transition hover:bg-slate-50"
+                      className="bg-white transition hover:bg-slate-50/80"
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-4">
                         <Link
-                          href={`/projects/${project.id}/items`}
-                          className="font-bold text-slate-900 hover:text-blue-600"
+                          href={`/projects/${project.id}`}
+                          className="font-semibold text-slate-900 hover:text-blue-600 transition text-[13.5px] leading-snug block"
                         >
-                          {project.project_name}
+                          {formatProjectTitle(project.project_name)}
                         </Link>
-                        <p className="mt-0.5 text-xs font-semibold text-blue-600">
-                          {project.project_code} • {project._count.project_items} linh kiện
-                        </p>
+                        <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold">
+                          <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700 border border-blue-200">
+                            {project.project_code}
+                          </span>
+                          <span className="text-slate-500 font-medium">
+                            📦 {project._count.project_items} linh kiện
+                          </span>
+                        </div>
                       </td>
 
-                      <td className="px-6 py-4 text-sm text-slate-700">
+                      <td className="px-5 py-4">
                         {project.customers ? (
                           <Link
                             href={`/customers/${project.customers.id}`}
-                            className="font-medium text-slate-900 hover:text-blue-600 hover:underline"
+                            className="text-sm font-semibold text-slate-800 hover:text-blue-600 hover:underline block"
                           >
                             {customerName}
                           </Link>
                         ) : (
-                          <span className="text-slate-400">Không gắn khách</span>
+                          <span className="text-xs text-slate-400">Không gắn khách</span>
                         )}
                       </td>
 
-                      <td className="px-6 py-4 text-sm text-slate-600">
-                        {formatDate(project.due_date)}
+                      <td className="px-5 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-semibold text-slate-800 tabular-nums">
+                            📅 {formatDate(project.due_date)}
+                          </span>
+                          <DeadlineBadge
+                            dueDate={project.due_date}
+                            status={project.status}
+                          />
+                        </div>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-4">
                         <div className="w-36">
-                          <div className="flex justify-between text-xs font-semibold mb-1">
-                            <span className="text-emerald-700">{formatCurrency(paidVal)}</span>
-                            <span className="text-slate-500">{percentPaid}%</span>
+                          <div className="flex justify-between text-xs font-semibold mb-1 tabular-nums">
+                            <span className="text-emerald-700 font-bold">{formatCurrency(paidVal)}</span>
+                            <span className="text-slate-500 font-medium">{percentPaid}%</span>
                           </div>
                           <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
                             <div
@@ -817,22 +806,19 @@ export default async function DashboardPage() {
                         </div>
                       </td>
 
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold ${
-                            projectStatusClasses[status]
-                          }`}
-                        >
-                          {projectStatusLabels[status]}
-                        </span>
+                      <td className="px-5 py-4">
+                        <ProjectStatusSelect
+                          projectId={project.id}
+                          currentStatus={project.status}
+                        />
                       </td>
 
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-5 py-4 text-right">
                         <Link
-                          href={`/projects/${project.id}/items`}
-                          className="inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                          href={`/projects/${project.id}`}
+                          className="inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-300 shadow-2xs"
                         >
-                          Linh kiện →
+                          Chi tiết →
                         </Link>
                       </td>
                     </tr>

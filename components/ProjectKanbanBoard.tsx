@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import Link from "next/link";
 import DeadlineBadge from "@/components/DeadlineBadge";
 import { getDeadlineInfo } from "@/lib/deadline";
+import { formatProjectTitle } from "@/lib/formatters";
 import { changeProjectStatus } from "@/app/projects/actions";
 
 type ProjectStatus =
@@ -193,7 +194,7 @@ export default function ProjectKanbanBoard({
                             href={`/projects/${project.id}`}
                             className="font-bold text-xs text-slate-900 group-hover:text-blue-600 transition line-clamp-2"
                           >
-                            {project.project_name}
+                            {formatProjectTitle(project.project_name)}
                           </Link>
                         </div>
 

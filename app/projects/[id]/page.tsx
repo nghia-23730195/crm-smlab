@@ -5,6 +5,7 @@ import DeadlineBadge from "@/components/DeadlineBadge";
 import DeleteProjectButton from "@/components/DeleteProjectButton";
 import ProjectStatusSelect from "@/components/ProjectStatusSelect";
 import { getDeadlineInfo } from "@/lib/deadline";
+import { formatProjectTitle } from "@/lib/formatters";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { deleteProject } from "../actions";
@@ -115,7 +116,7 @@ export default async function ProjectDetailPage({
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-bold text-slate-900">
-              {project.project_name}
+              {formatProjectTitle(project.project_name)}
             </h1>
             <span className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-200">
               {project.project_code}

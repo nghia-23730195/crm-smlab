@@ -6,6 +6,7 @@ import ExportCsvButton from "@/components/ExportCsvButton";
 import ProjectKanbanBoard from "@/components/ProjectKanbanBoard";
 import ProjectStatusSelect from "@/components/ProjectStatusSelect";
 import { getDeadlineInfo } from "@/lib/deadline";
+import { formatProjectTitle } from "@/lib/formatters";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { deleteProject } from "./actions";
@@ -771,7 +772,7 @@ export default async function ProjectsPage({
                               href={`/projects/${project.id}`}
                               className="font-semibold text-slate-900 hover:text-blue-600 transition text-[13.5px] leading-snug block"
                             >
-                              {project.project_name}
+                              {formatProjectTitle(project.project_name)}
                             </Link>
                             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
                               <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700 border border-blue-200">
