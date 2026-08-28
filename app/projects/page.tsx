@@ -293,6 +293,7 @@ export default async function ProjectsPage({
       select: {
         status: true,
         due_date: true,
+        completed_date: true,
         actual_value: true,
         paid_amount: true,
       },
@@ -303,7 +304,8 @@ export default async function ProjectsPage({
   const projects = rawProjects.filter((p) => {
     if (selectedDeadline === "all") return true;
 
-    const info = getDeadlineInfo(p.due_date, p.status);
+    const effectiveDeadline = p.due_date ?? p.completed_date;
+    const info = getDeadlineInfo(effectiveDeadline, p.status);
 
     if (selectedDeadline === "overdue") {
       return info.isOverdue;
@@ -323,12 +325,14 @@ export default async function ProjectsPage({
 
   // Calculate deadline statistics for current year
   const overdueProjectsCount = rawProjects.filter((p) => {
-    const info = getDeadlineInfo(p.due_date, p.status);
+    const effectiveDeadline = p.due_date ?? p.completed_date;
+    const info = getDeadlineInfo(effectiveDeadline, p.status);
     return info.isOverdue;
   }).length;
 
   const dueSoonProjectsCount = rawProjects.filter((p) => {
-    const info = getDeadlineInfo(p.due_date, p.status);
+    const effectiveDeadline = p.due_date ?? p.completed_date;
+    const info = getDeadlineInfo(effectiveDeadline, p.status);
     return info.daysRemaining !== null && info.daysRemaining >= 0 && info.daysRemaining <= 3;
   }).length;
 
@@ -663,7 +667,8 @@ export default async function ProjectsPage({
                       const actualVal = Number(project.actual_value ?? 0);
                       const paidVal = Number(project.paid_amount ?? 0);
 
-                      const deadlineInfo = getDeadlineInfo(project.due_date, project.status);
+                      const effectiveDeadline = project.due_date ?? project.completed_date;
+                      const deadlineInfo = getDeadlineInfo(effectiveDeadline, project.status);
 
                       return (
                         <tr
@@ -714,10 +719,10 @@ export default async function ProjectsPage({
                           <td className="px-3.5 py-3.5 whitespace-nowrap">
                             <div className="flex flex-col gap-1">
                               <p className="text-xs font-semibold text-slate-800 tabular-nums">
-                                📅 {formatDate(project.due_date)}
+                                📅 {formatDate(effectiveDeadline)}
                               </p>
                               <DeadlineBadge
-                                dueDate={project.due_date}
+                                dueDate={effectiveDeadline}
                                 status={project.status}
                               />
                             </div>

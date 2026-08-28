@@ -266,6 +266,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         id: true,
         status: true,
         due_date: true,
+        completed_date: true,
         project_name: true,
         project_code: true,
       },
@@ -378,16 +379,18 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   // Overdue projects: not completed/cancelled with due_date < today
   const overdueProjects = allProjectsSummary.filter((p) => {
-    if (p.status === "completed" || p.status === "cancelled" || !p.due_date) return false;
-    const d = new Date(p.due_date);
+    const dDate = p.due_date ?? p.completed_date;
+    if (p.status === "completed" || p.status === "cancelled" || !dDate) return false;
+    const d = new Date(dDate);
     d.setUTCHours(0, 0, 0, 0);
     return d < today;
   });
 
   // Due soon projects (<= 7 days)
   const dueSoonProjects = allProjectsSummary.filter((p) => {
-    if (p.status === "completed" || p.status === "cancelled" || !p.due_date) return false;
-    const d = new Date(p.due_date);
+    const dDate = p.due_date ?? p.completed_date;
+    if (p.status === "completed" || p.status === "cancelled" || !dDate) return false;
+    const d = new Date(dDate);
     d.setUTCHours(0, 0, 0, 0);
     return d >= today && d <= sevenDaysLater;
   });
@@ -1074,10 +1077,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           <span className="text-xs font-semibold text-slate-800 tabular-nums">
-                            📅 {formatDate(project.due_date)}
+                            📅 {formatDate(project.due_date ?? project.completed_date)}
                           </span>
                           <DeadlineBadge
-                            dueDate={project.due_date}
+                            dueDate={project.due_date ?? project.completed_date}
                             status={project.status}
                           />
                         </div>

@@ -191,11 +191,11 @@ export default async function EditProjectPage({
             />
 
             <FormField
-              label="Ngày hoàn thành"
-              name="completed_date"
+              label="Hạn hoàn thành (Deadline)"
+              name="due_date"
               type="date"
               defaultValue={formatDateInput(
-                project.completed_date,
+                project.due_date ?? project.completed_date,
               )}
             />
           </div>

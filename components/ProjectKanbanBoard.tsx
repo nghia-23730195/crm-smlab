@@ -22,6 +22,7 @@ export type ProjectItem = {
   project_type: string | null;
   status: string;
   due_date: Date | null;
+  completed_date?: Date | null;
   actual_value: unknown;
   paid_amount: unknown;
   customers: {
@@ -216,7 +217,7 @@ export default function ProjectKanbanBoard({
                         <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2 text-[11px]">
                           <span className="text-slate-400 font-medium">Hạn chót:</span>
                           <DeadlineBadge
-                            dueDate={project.due_date}
+                            dueDate={project.due_date ?? project.completed_date}
                             status={project.status}
                           />
                         </div>

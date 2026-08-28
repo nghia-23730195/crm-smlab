@@ -176,8 +176,8 @@ export default async function NewProjectPage() {
             />
 
             <FormField
-              label="Ngày hoàn thành"
-              name="completed_date"
+              label="Hạn hoàn thành (Deadline)"
+              name="due_date"
               type="date"
             />
           </div>

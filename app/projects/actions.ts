@@ -211,10 +211,10 @@ export async function createProject(
       status: data.status,
       description: data.description || null,
       start_date: data.startDate,
-      due_date: data.dueDate,
+      due_date: data.dueDate ?? data.completedDate,
       completed_date:
         data.status === "completed"
-          ? data.completedDate ?? new Date()
+          ? data.completedDate ?? data.dueDate ?? new Date()
           : data.completedDate,
       actual_value: data.actualValue,
       paid_amount: data.paidAmount,
@@ -320,10 +320,10 @@ export async function updateProject(
       status: data.status,
       description: data.description || null,
       start_date: data.startDate,
-      due_date: data.dueDate,
+      due_date: data.dueDate ?? data.completedDate,
       completed_date:
         data.status === "completed"
-          ? data.completedDate ?? new Date()
+          ? data.completedDate ?? data.dueDate ?? new Date()
           : data.completedDate,
       actual_value: data.actualValue,
       paid_amount: data.paidAmount,
