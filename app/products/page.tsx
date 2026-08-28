@@ -49,26 +49,6 @@ function getStockStatus(
   return "in-stock";
 }
 
-function getStatusLabel(status: string) {
-  if (status === "in-stock") {
-    return "Còn hàng";
-  }
-
-  if (status === "low-stock") {
-    return "Sắp hết";
-  }
-
-  if (status === "out-of-stock") {
-    return "Hết hàng";
-  }
-
-  if (status === "inactive") {
-    return "Ngừng bán";
-  }
-
-  return "Tất cả trạng thái";
-}
-
 export default async function ProductsPage({
   searchParams,
 }: ProductsPageProps) {
@@ -109,6 +89,12 @@ export default async function ProductsPage({
                     mode: "insensitive",
                   },
                 },
+                {
+                  description: {
+                    contains: keyword,
+                    mode: "insensitive",
+                  },
+                },
               ],
             }
           : {}),
@@ -145,62 +131,51 @@ export default async function ProductsPage({
     selectedStatus !== "all";
 
   return (
-    <div className="p-5 md:p-8">
+    <div className="p-5 md:p-8 space-y-6">
       {params.success === "created" && (
-        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
           Thêm sản phẩm thành công.
         </div>
       )}
 
       {params.success === "updated" && (
-        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
           Cập nhật sản phẩm thành công.
         </div>
       )}
 
       {params.success === "deleted" && (
-        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
           Xóa sản phẩm thành công.
         </div>
       )}
 
       {params.error && (
-        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
           {params.error}
         </div>
       )}
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                Danh sách sản phẩm
-              </h2>
+      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 p-5 md:p-6">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-lg font-bold text-slate-900">
+              Danh sách sản phẩm & Linh kiện
+            </h2>
 
-              <p className="mt-1 text-sm text-slate-600">
-                Hiển thị {products.length} sản phẩm
-                {hasFilters
-                  ? ` trên ${allProducts.length} kết quả tìm kiếm`
-                  : " trong hệ thống"}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                href="/products/new"
-                className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-              >
-                + Thêm sản phẩm
-              </Link>
-            </div>
+            <p className="text-xs text-slate-500">
+              Hiển thị {products.length} sản phẩm
+              {hasFilters
+                ? ` trên ${allProducts.length} kết quả lọc`
+                : " trong hệ thống SM-LAB"}
+            </p>
           </div>
 
           {/* Quick Filter Pills */}
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Link
               href={`/products?q=${encodeURIComponent(keyword)}&status=all`}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
                 selectedStatus === "all"
                   ? "bg-slate-900 text-white shadow-xs"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -211,7 +186,7 @@ export default async function ProductsPage({
 
             <Link
               href={`/products?q=${encodeURIComponent(keyword)}&status=in-stock`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                 selectedStatus === "in-stock"
                   ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
                   : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
@@ -222,7 +197,7 @@ export default async function ProductsPage({
 
             <Link
               href={`/products?q=${encodeURIComponent(keyword)}&status=low-stock`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                 selectedStatus === "low-stock"
                   ? "bg-amber-600 text-white border-amber-600 shadow-xs"
                   : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
@@ -233,7 +208,7 @@ export default async function ProductsPage({
 
             <Link
               href={`/products?q=${encodeURIComponent(keyword)}&status=out-of-stock`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                 selectedStatus === "out-of-stock"
                   ? "bg-red-600 text-white border-red-600 shadow-xs"
                   : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
@@ -244,7 +219,7 @@ export default async function ProductsPage({
 
             <Link
               href={`/products?q=${encodeURIComponent(keyword)}&status=inactive`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                 selectedStatus === "inactive"
                   ? "bg-slate-700 text-white border-slate-700 shadow-xs"
                   : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
@@ -254,10 +229,11 @@ export default async function ProductsPage({
             </Link>
           </div>
 
+          {/* Search Form */}
           <form
             action="/products"
             method="GET"
-            className="mt-4 flex w-full flex-col gap-3 lg:flex-row"
+            className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center"
           >
             <input
               type="hidden"
@@ -269,136 +245,78 @@ export default async function ProductsPage({
               name="q"
               defaultValue={keyword}
               placeholder="Tìm theo tên, mã hoặc danh mục..."
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 lg:w-80"
+              className="w-full sm:w-80 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
 
             <select
               name="status"
               defaultValue={selectedStatus}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             >
-              <option value="all">
-                Tất cả trạng thái
-              </option>
-
-              <option value="in-stock">
-                Còn hàng
-              </option>
-
-              <option value="low-stock">
-                Sắp hết
-              </option>
-
-              <option value="out-of-stock">
-                Hết hàng
-              </option>
-
-              <option value="inactive">
-                Ngừng bán
-              </option>
+              <option value="all">Tất cả trạng thái</option>
+              <option value="in-stock">Còn hàng</option>
+              <option value="low-stock">Sắp hết</option>
+              <option value="out-of-stock">Hết hàng</option>
+              <option value="inactive">Ngừng bán</option>
             </select>
 
             <button
               type="submit"
-              className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 shadow-2xs"
             >
-              Tìm
+              Tìm kiếm
             </button>
 
             {hasFilters && (
               <Link
                 href="/products"
-                className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
                 Xóa lọc
               </Link>
             )}
           </form>
-
-          {hasFilters && (
-            <div className="mt-4 flex flex-wrap gap-2 text-xs">
-              {keyword && (
-                <span className="rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
-                  Từ khóa: {keyword}
-                </span>
-              )}
-
-              {selectedStatus !== "all" && (
-                <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">
-                  Trạng thái:{" "}
-                  {getStatusLabel(selectedStatus)}
-                </span>
-              )}
-            </div>
-          )}
         </div>
 
         {products.length === 0 ? (
           <div className="p-12 text-center">
-            <h3 className="text-lg font-semibold text-slate-900">
+            <h3 className="text-base font-bold text-slate-900">
               Không tìm thấy sản phẩm
             </h3>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-500">
               Hãy thử từ khóa khác hoặc xóa bộ lọc hiện tại.
             </p>
 
             {hasFilters ? (
               <Link
                 href="/products"
-                className="mt-5 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
               >
                 Xem tất cả sản phẩm
               </Link>
             ) : (
               <Link
                 href="/products/new"
-                className="mt-5 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
               >
-                Thêm sản phẩm đầu tiên
+                + Thêm sản phẩm đầu tiên
               </Link>
             )}
           </div>
         ) : (
           <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[1100px] table-fixed">
-              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+            <table className="w-full text-left">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
                 <tr>
-                  <th className="w-[85px] px-3 py-4">
-                    Mã
-                  </th>
-
-                  <th className="w-[210px] px-3 py-4">
-                    Tên sản phẩm
-                  </th>
-
-                  <th className="w-[115px] px-3 py-4">
-                    Danh mục
-                  </th>
-
-                  <th className="w-[70px] px-3 py-4">
-                    Đơn vị
-                  </th>
-
-                  <th className="w-[115px] px-3 py-4">
-                    Giá nhập
-                  </th>
-
-                  <th className="w-[115px] px-3 py-4">
-                    Giá bán
-                  </th>
-
-                  <th className="w-[80px] px-3 py-4">
-                    Tồn kho
-                  </th>
-
-                  <th className="w-[115px] px-3 py-4">
-                    Trạng thái
-                  </th>
-
-                  <th className="w-[210px] px-3 py-4">
-                    Thao tác
-                  </th>
+                  <th className="px-4 py-3.5">Sản phẩm / Linh kiện</th>
+                  <th className="px-4 py-3.5">Danh mục</th>
+                  <th className="px-4 py-3.5">ĐVT</th>
+                  <th className="px-4 py-3.5 text-right">Giá nhập</th>
+                  <th className="px-4 py-3.5 text-right">Giá bán</th>
+                  <th className="px-4 py-3.5 text-right">Tồn kho</th>
+                  <th className="px-4 py-3.5">Trạng thái</th>
+                  <th className="px-4 py-3.5 text-right">Thao tác</th>
                 </tr>
               </thead>
 
@@ -429,26 +347,27 @@ export default async function ProductsPage({
                   return (
                     <tr
                       key={product.id}
-                      className="bg-white text-slate-900 transition hover:bg-slate-50"
+                      className="bg-white text-slate-900 transition hover:bg-slate-50/80 group"
                     >
-                      <td className="whitespace-nowrap px-3 py-4 text-sm font-semibold text-blue-600">
-                        {product.product_code}
-                      </td>
-
-                      <td className="px-3 py-4">
+                      <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
                           <ComponentThumbnail
                             imageUrl={product.image_url}
                             name={product.name}
                             category={product.category}
-                            size="sm"
+                            size="md"
                           />
                           <div className="min-w-0">
-                            <p className="truncate font-semibold text-slate-900">
-                              {product.name}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200">
+                                {product.product_code}
+                              </span>
+                              <p className="font-semibold text-slate-900 text-sm">
+                                {product.name}
+                              </p>
+                            </div>
                             {product.description && (
-                              <p className="mt-0.5 truncate text-xs text-slate-500">
+                              <p className="mt-0.5 max-w-sm truncate text-xs text-slate-500">
                                 {product.description}
                               </p>
                             )}
@@ -456,34 +375,29 @@ export default async function ProductsPage({
                         </div>
                       </td>
 
-                      <td className="px-3 py-4 text-sm text-slate-700">
-                        {product.category ??
-                          "Chưa phân loại"}
+                      <td className="px-4 py-3.5 text-xs text-slate-600">
+                        {product.category ?? "Chưa phân loại"}
                       </td>
 
-                      <td className="px-3 py-4 text-sm text-slate-700">
+                      <td className="px-4 py-3.5 text-xs text-slate-600">
                         {product.unit}
                       </td>
 
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-700">
-                        {formatCurrency(
-                          product.cost_price,
-                        )}
+                      <td className="px-4 py-3.5 text-right text-xs font-medium text-slate-700 tabular-nums">
+                        {formatCurrency(product.cost_price)}
                       </td>
 
-                      <td className="whitespace-nowrap px-3 py-4 text-sm font-semibold text-slate-900">
-                        {formatCurrency(
-                          product.sale_price,
-                        )}
+                      <td className="px-4 py-3.5 text-right text-xs font-bold text-slate-900 tabular-nums">
+                        {formatCurrency(product.sale_price)}
                       </td>
 
-                      <td className="px-3 py-4 text-sm font-medium text-slate-900">
+                      <td className="px-4 py-3.5 text-right text-sm font-bold text-slate-900 tabular-nums">
                         {product.stock_quantity.toString()}
                       </td>
 
-                      <td className="px-3 py-4">
+                      <td className="px-4 py-3.5">
                         <span
-                          className={`inline-flex rounded-full px-3 py-1 text-center text-xs font-semibold ${
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                             product.is_active
                               ? statusClass
                               : "bg-slate-200 text-slate-700"
@@ -495,11 +409,11 @@ export default async function ProductsPage({
                         </span>
                       </td>
 
-                      <td className="px-3 py-4">
-                        <div className="flex items-center gap-1.5">
+                      <td className="px-4 py-3.5 text-right">
+                        <div className="inline-flex items-center justify-end gap-1.5">
                           <Link
                             href={`/products/${product.id}/edit`}
-                            className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
                           >
                             Sửa
                           </Link>
