@@ -457,7 +457,7 @@ export default async function FinancePage({
 
       {/* 2. Main Section */}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-6">
+        <div className="border-b border-slate-100 p-5 md:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-lg font-bold text-slate-900">
@@ -470,15 +470,15 @@ export default async function FinancePage({
               </p>
             </div>
 
-            {/* Actions: View Switcher, Export CSV, Add Transaction */}
+            {/* Actions: View Switcher & Export CSV */}
             <div className="flex flex-wrap items-center gap-2.5">
               {/* View Switcher Toggle */}
-              <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200">
+              <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
                 <Link
                   href={`/finance?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=ledger`}
                   className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
                     currentView === "ledger"
-                      ? "bg-white text-blue-600 shadow-xs"
+                      ? "bg-white text-blue-700 shadow-2xs"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
@@ -492,7 +492,7 @@ export default async function FinancePage({
                   href={`/finance?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=monthly`}
                   className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
                     currentView === "monthly"
-                      ? "bg-white text-blue-600 shadow-xs"
+                      ? "bg-white text-blue-700 shadow-2xs"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
@@ -506,8 +506,8 @@ export default async function FinancePage({
                   href={`/finance?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=categories`}
                   className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
                     currentView === "categories"
-                      ? "bg-white text-blue-600 shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
+                  ? "bg-white text-blue-700 shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -522,25 +522,18 @@ export default async function FinancePage({
                 headers={csvHeaders}
                 rows={csvRows}
               />
-
-              <Link
-                href="/finance/new"
-                className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
-              >
-                + Tạo giao dịch mới
-              </Link>
             </div>
           </div>
 
           {/* Quick Date / Period Filter Pills */}
-          <div className="mt-5 flex flex-wrap items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold uppercase text-slate-400 mr-1">Thời gian:</span>
 
             <Link
               href={`/finance?year=${currentSystemYear}&month=${currentSystemMonth}&type=${selectedType}&view=${currentView}`}
               className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                 selectedYear === String(currentSystemYear) && selectedMonth === String(currentSystemMonth)
-                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  ? "bg-blue-50 text-blue-700 border-blue-300 shadow-2xs"
                   : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
               }`}
             >
@@ -553,7 +546,7 @@ export default async function FinancePage({
                 (currentSystemMonth === 1
                   ? selectedYear === String(currentSystemYear - 1) && selectedMonth === "12"
                   : selectedYear === String(currentSystemYear) && selectedMonth === String(currentSystemMonth - 1))
-                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                  ? "bg-blue-50 text-blue-700 border-blue-300 shadow-2xs"
                   : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
               }`}
             >
@@ -598,7 +591,7 @@ export default async function FinancePage({
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href={`/finance?year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=${currentView}&type=all`}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
                 selectedType === "all"
                   ? "bg-slate-900 text-white shadow-xs"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -609,10 +602,10 @@ export default async function FinancePage({
 
             <Link
               href={`/finance?year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=${currentView}&type=income`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                 selectedType === "income"
-                  ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                  : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs font-bold"
+                  : "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50"
               }`}
             >
               🟢 Khoản thu ({transactions.filter((t) => t.transaction_type === "income").length})
@@ -620,10 +613,10 @@ export default async function FinancePage({
 
             <Link
               href={`/finance?year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=${currentView}&type=expense`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
+              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
                 selectedType === "expense"
-                  ? "bg-red-600 text-white border-red-600 shadow-xs"
-                  : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                  ? "bg-rose-50 text-rose-700 border-rose-300 shadow-2xs font-bold"
+                  : "bg-white text-rose-700 border-rose-200 hover:bg-rose-50"
               }`}
             >
               🔴 Khoản chi ({transactions.filter((t) => t.transaction_type === "expense").length})
@@ -634,7 +627,7 @@ export default async function FinancePage({
           <form
             action="/finance"
             method="GET"
-            className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
+            className="mt-4 flex flex-wrap items-center gap-2.5"
           >
             <input type="hidden" name="type" value={selectedType} />
             <input type="hidden" name="view" value={currentView} />
@@ -644,16 +637,16 @@ export default async function FinancePage({
               name="q"
               defaultValue={keyword}
               placeholder="Tìm mã, nội dung..."
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-44 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
 
             {/* Year Selector */}
             <select
               name="year"
               defaultValue={selectedYear}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 outline-none transition focus:border-blue-500"
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
-              <option value="all">Tất cả các năm</option>
+              <option value="all">Tất cả năm</option>
               {yearOptions.map((y) => (
                 <option key={y} value={y}>
                   Năm {y}
@@ -665,9 +658,9 @@ export default async function FinancePage({
             <select
               name="month"
               defaultValue={selectedMonth}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 outline-none transition focus:border-blue-500"
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
-              <option value="all">Tất cả các tháng</option>
+              <option value="all">Tất cả tháng</option>
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i + 1} value={i + 1}>
                   Tháng {i + 1}
@@ -679,7 +672,7 @@ export default async function FinancePage({
             <select
               name="category"
               defaultValue={selectedCategory}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-700 outline-none transition focus:border-blue-500"
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500 max-w-[160px]"
             >
               <option value="all">Tất cả danh mục</option>
               {allCategoriesList.map((cat) => (
@@ -693,7 +686,7 @@ export default async function FinancePage({
             <select
               name="project"
               defaultValue={selectedProject}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-700 outline-none transition focus:border-blue-500"
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500 max-w-[180px]"
             >
               <option value="all">Tất cả dự án</option>
               {projects.map((project) => (
@@ -703,23 +696,21 @@ export default async function FinancePage({
               ))}
             </select>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="submit"
-                className="flex-1 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700"
-              >
-                Lọc dữ liệu
-              </button>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-4 py-2 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
+            >
+              🔍 Lọc dữ liệu
+            </button>
 
-              {hasFilters && (
-                <Link
-                  href={`/finance?view=${currentView}`}
-                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Xóa
-                </Link>
-              )}
-            </div>
+            {hasFilters && (
+              <Link
+                href={`/finance?view=${currentView}`}
+                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
+              >
+                Xóa lọc
+              </Link>
+            )}
           </form>
         </div>
 
