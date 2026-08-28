@@ -130,6 +130,24 @@ export default async function EditProjectPage({
               placeholder="Ví dụ: Robot, IoT, AI, Website..."
             />
 
+            <FormField
+              label="Tổng giá trị hợp đồng (VNĐ)"
+              name="actual_value"
+              type="number"
+              min="0"
+              step="1000"
+              defaultValue={project.actual_value.toString()}
+            />
+
+            <FormField
+              label="Số tiền đã thanh toán (VNĐ)"
+              name="paid_amount"
+              type="number"
+              min="0"
+              step="1000"
+              defaultValue={project.paid_amount.toString()}
+            />
+
             <SelectField
               label="Trạng thái"
               name="status"
@@ -173,39 +191,12 @@ export default async function EditProjectPage({
             />
 
             <FormField
-              label="Hạn hoàn thành"
-              name="due_date"
-              type="date"
-              defaultValue={formatDateInput(
-                project.due_date,
-              )}
-            />
-
-            <FormField
               label="Ngày hoàn thành"
               name="completed_date"
               type="date"
               defaultValue={formatDateInput(
                 project.completed_date,
               )}
-            />
-
-            <FormField
-              label="Giá trị thực tế"
-              name="actual_value"
-              type="number"
-              min="0"
-              step="1000"
-              defaultValue={project.actual_value.toString()}
-            />
-
-            <FormField
-              label="Đã thanh toán"
-              name="paid_amount"
-              type="number"
-              min="0"
-              step="1000"
-              defaultValue={project.paid_amount.toString()}
             />
           </div>
 
@@ -273,7 +264,7 @@ function FormField({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-semibold text-slate-700"
+        className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
       >
         {label}
 
@@ -291,7 +282,7 @@ function FormField({
         required={required}
         min={min}
         step={step}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
       />
     </div>
   );
@@ -321,7 +312,7 @@ function SelectField({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-semibold text-slate-700"
+        className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
       >
         {label}
 
@@ -335,7 +326,7 @@ function SelectField({
         name={name}
         defaultValue={defaultValue}
         required={required}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
       >
         {options.map((option) => (
           <option
