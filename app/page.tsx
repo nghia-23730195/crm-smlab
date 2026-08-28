@@ -89,11 +89,74 @@ function getRecentMonths(count: number, now: Date) {
   return months;
 }
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams?: Promise<{
+    stage?: string;
+  }>;
+};
+
+function getProjectProgress(status: string) {
+  switch (status) {
+    case "planning":
+      return {
+        percent: 25,
+        label: "Đang chuẩn bị",
+        subLabel: "Lên linh kiện & thiết kế",
+        barColor: "bg-violet-500",
+        badgeColor: "bg-violet-50 text-violet-700 border-violet-200",
+      };
+    case "in_progress":
+      return {
+        percent: 60,
+        label: "Đang thực hiện",
+        subLabel: "Lắp ráp & lập trình",
+        barColor: "bg-blue-500",
+        badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
+      };
+    case "waiting":
+      return {
+        percent: 85,
+        label: "Chờ nghiệm thu",
+        subLabel: "Chờ phản hồi & duyệt mẫu",
+        barColor: "bg-amber-500",
+        badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
+      };
+    case "completed":
+      return {
+        percent: 100,
+        label: "Đã hoàn thành",
+        subLabel: "Bàn giao thành công",
+        barColor: "bg-emerald-500",
+        badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      };
+    case "cancelled":
+      return {
+        percent: 0,
+        label: "Đã hủy",
+        subLabel: "Dự án dừng",
+        barColor: "bg-rose-400",
+        badgeColor: "bg-rose-50 text-rose-700 border-rose-200",
+      };
+    default:
+      return {
+        percent: 10,
+        label: "Bản nháp",
+        subLabel: "Khởi tạo thông tin",
+        barColor: "bg-slate-400",
+        badgeColor: "bg-slate-50 text-slate-700 border-slate-200",
+      };
+  }
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const { organizationId } =
     await requireCurrentUser();
 
+  const params = searchParams ? await searchParams : {};
+  const selectedStage = params?.stage || "all";
+
   const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
   const currentMonthStart = startOfUTCMonth(now);
   const nextMonthStart = startOfNextUTCMonth(now);
@@ -124,18 +187,34 @@ export default async function DashboardPage() {
     ),
   );
 
+  // Status where filter for dashboard project list
+  let stageWhereFilter: Record<string, unknown> = {};
+  if (selectedStage === "planning") {
+    stageWhereFilter = { status: "planning" };
+  } else if (selectedStage === "in_progress") {
+    stageWhereFilter = { status: "in_progress" };
+  } else if (selectedStage === "waiting") {
+    stageWhereFilter = { status: "waiting" };
+  } else if (selectedStage === "completed") {
+    stageWhereFilter = { status: "completed" };
+  } else if (selectedStage === "urgent") {
+    stageWhereFilter = {
+      status: { notIn: ["completed", "cancelled"] },
+      due_date: { lte: sevenDaysLater },
+    };
+  }
+
   const [
     totalCustomers,
     newCustomersThisMonth,
     activeProducts,
     productsForStock,
-    activeProjects,
-    projectsDueSoonList,
+    allProjectsSummary,
     currentMonthTransactions,
     previousMonthIncomeTransactions,
     sixMonthTransactions,
     projectsForDebt,
-    recentProjects,
+    dashboardProjects,
   ] = await Promise.all([
     prisma.customers.count({
       where: {
@@ -178,37 +257,18 @@ export default async function DashboardPage() {
       },
     }),
 
-    prisma.projects.count({
-      where: {
-        organization_id: organizationId,
-        status: {
-          in: [
-            "planning",
-            "in_progress",
-            "waiting",
-          ],
-        },
-      },
-    }),
-
+    // Get all projects for statistics & progress metrics
     prisma.projects.findMany({
       where: {
         organization_id: organizationId,
-        due_date: {
-          gte: now,
-          lte: sevenDaysLater,
-        },
-        status: {
-          notIn: ["completed", "cancelled"],
-        },
       },
       select: {
         id: true,
-        project_code: true,
-        project_name: true,
+        status: true,
         due_date: true,
+        project_name: true,
+        project_code: true,
       },
-      take: 3,
     }),
 
     prisma.transactions.findMany({
@@ -270,9 +330,11 @@ export default async function DashboardPage() {
       },
     }),
 
+    // Projects list shown on Dashboard with item readiness
     prisma.projects.findMany({
       where: {
         organization_id: organizationId,
+        ...stageWhereFilter,
       },
       include: {
         customers: {
@@ -283,18 +345,49 @@ export default async function DashboardPage() {
             company_name: true,
           },
         },
+        project_items: {
+          select: {
+            id: true,
+            purchase_status: true,
+          },
+        },
         _count: {
           select: {
             project_items: true,
           },
         },
       },
-      orderBy: {
-        created_at: "desc",
-      },
-      take: 6,
+      orderBy: [
+        {
+          created_at: "desc",
+        },
+      ],
+      take: 8,
     }),
   ]);
+
+  const planningCount = allProjectsSummary.filter((p) => p.status === "planning").length;
+  const inProgressCount = allProjectsSummary.filter((p) => p.status === "in_progress").length;
+  const waitingCount = allProjectsSummary.filter((p) => p.status === "waiting").length;
+  const completedCount = allProjectsSummary.filter((p) => p.status === "completed").length;
+
+  const totalActiveProjects = planningCount + inProgressCount + waitingCount;
+
+  // Overdue projects: not completed/cancelled with due_date < today
+  const overdueProjects = allProjectsSummary.filter((p) => {
+    if (p.status === "completed" || p.status === "cancelled" || !p.due_date) return false;
+    const d = new Date(p.due_date);
+    d.setUTCHours(0, 0, 0, 0);
+    return d < today;
+  });
+
+  // Due soon projects (<= 7 days)
+  const dueSoonProjects = allProjectsSummary.filter((p) => {
+    if (p.status === "completed" || p.status === "cancelled" || !p.due_date) return false;
+    const d = new Date(p.due_date);
+    d.setUTCHours(0, 0, 0, 0);
+    return d >= today && d <= sevenDaysLater;
+  });
 
   const lowStockItems = productsForStock.filter((product) => {
     const stock = Number(product.stock_quantity);
@@ -393,7 +486,7 @@ export default async function DashboardPage() {
   return (
     <div className="p-5 md:p-8 space-y-6">
       {/* 1. Smart Operational Alerts */}
-      {(lowStockItems.length > 0 || outOfStockItems.length > 0 || projectsDueSoonList.length > 0) && (
+      {(lowStockItems.length > 0 || outOfStockItems.length > 0 || overdueProjects.length > 0 || dueSoonProjects.length > 0) && (
         <div className="grid gap-4 sm:grid-cols-2">
           {(lowStockItems.length > 0 || outOfStockItems.length > 0) && (
             <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-amber-900 shadow-2xs">
@@ -420,7 +513,7 @@ export default async function DashboardPage() {
             </div>
           )}
 
-          {projectsDueSoonList.length > 0 && (
+          {(overdueProjects.length > 0 || dueSoonProjects.length > 0) && (
             <div className="flex items-center justify-between rounded-2xl border border-blue-200 bg-blue-50/80 p-4 text-blue-900 shadow-2xs">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
@@ -429,14 +522,19 @@ export default async function DashboardPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-bold">Dự án sắp đến hạn</p>
+                  <p className="text-sm font-bold">Tiến độ hạn chót</p>
                   <p className="text-xs text-blue-700">
-                    {projectsDueSoonList.length} dự án cần bàn giao trong 7 ngày tới
+                    {overdueProjects.length > 0 && (
+                      <span className="font-bold text-red-700 mr-1">
+                        🚨 {overdueProjects.length} dự án trễ hạn!
+                      </span>
+                    )}
+                    {dueSoonProjects.length > 0 && `${dueSoonProjects.length} dự án cần giao trong 7 ngày`}
                   </p>
                 </div>
               </div>
               <Link
-                href="/projects"
+                href="/?stage=urgent"
                 className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-700 shadow-2xs"
               >
                 Xem tiến độ →
@@ -476,8 +574,8 @@ export default async function DashboardPage() {
 
         <KpiCard
           title="Dự án đang thực hiện"
-          value={activeProjects.toString()}
-          subtext={`Công nợ: ${formatCurrency(totalDebt)}`}
+          value={totalActiveProjects.toString()}
+          subtext={`${inProgressCount} đang làm · ${planningCount} chuẩn bị · ${waitingCount} chờ khách`}
           href="/projects"
           iconColor="bg-amber-50 text-amber-600 border-amber-100"
           icon={(
@@ -630,34 +728,238 @@ export default async function DashboardPage() {
         </section>
       </div>
 
-      {/* 4. Recent Projects Table */}
+      {/* 4. Theo dõi tiến độ công việc & Dự án */}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">
-              Dự án gần đây
-            </h3>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Theo dõi tình trạng thực hiện và thanh toán dự án
-            </p>
+        {/* Header & Stage Overview */}
+        <div className="border-b border-slate-100 p-5 md:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 border border-blue-200/80 text-sm">
+                  📊
+                </span>
+                <h3 className="text-base font-bold text-slate-900">
+                  Theo dõi tiến độ công việc & Dự án
+                </h3>
+              </div>
+              <p className="mt-1 text-xs text-slate-500">
+                Quản lý chi tiết tiến độ từng giai đoạn, vật tư linh kiện, thời hạn bàn giao và thanh toán
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <Link
+                href="/projects/new"
+                className="inline-flex items-center gap-1 text-xs font-bold text-white bg-blue-600 px-3.5 py-1.5 rounded-xl transition hover:bg-blue-700 shadow-2xs"
+              >
+                + Tạo dự án
+              </Link>
+              <Link
+                href="/projects"
+                className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1.5 rounded-xl transition hover:bg-blue-100 shadow-2xs"
+              >
+                Xem tất cả ({allProjectsSummary.length}) →
+              </Link>
+            </div>
           </div>
 
-          <Link
-            href="/projects"
-            className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1.5 rounded-xl transition hover:bg-blue-100 shadow-2xs"
-          >
-            Xem tất cả dự án →
-          </Link>
+          {/* 4 Stage Cards */}
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Link
+              href="/?stage=planning"
+              className={`group flex items-center justify-between rounded-xl border p-3 transition ${
+                selectedStage === "planning"
+                  ? "border-violet-300 bg-violet-50/90 ring-2 ring-violet-200"
+                  : "border-violet-100 bg-violet-50/40 hover:bg-violet-50 hover:border-violet-200"
+              }`}
+            >
+              <div>
+                <span className="text-[11px] font-semibold text-violet-700 block">
+                  1. Đang chuẩn bị
+                </span>
+                <span className="text-lg font-bold text-violet-900">
+                  {planningCount} <span className="text-xs font-normal text-violet-600">dự án</span>
+                </span>
+              </div>
+              <span className="text-xs font-bold text-violet-600 bg-violet-100/80 px-2 py-0.5 rounded-md">
+                25%
+              </span>
+            </Link>
+
+            <Link
+              href="/?stage=in_progress"
+              className={`group flex items-center justify-between rounded-xl border p-3 transition ${
+                selectedStage === "in_progress"
+                  ? "border-blue-300 bg-blue-50/90 ring-2 ring-blue-200"
+                  : "border-blue-100 bg-blue-50/40 hover:bg-blue-50 hover:border-blue-200"
+              }`}
+            >
+              <div>
+                <span className="text-[11px] font-semibold text-blue-700 block">
+                  2. Đang thực hiện
+                </span>
+                <span className="text-lg font-bold text-blue-900">
+                  {inProgressCount} <span className="text-xs font-normal text-blue-600">dự án</span>
+                </span>
+              </div>
+              <span className="text-xs font-bold text-blue-600 bg-blue-100/80 px-2 py-0.5 rounded-md">
+                60%
+              </span>
+            </Link>
+
+            <Link
+              href="/?stage=waiting"
+              className={`group flex items-center justify-between rounded-xl border p-3 transition ${
+                selectedStage === "waiting"
+                  ? "border-amber-300 bg-amber-50/90 ring-2 ring-amber-200"
+                  : "border-amber-100 bg-amber-50/40 hover:bg-amber-50 hover:border-amber-200"
+              }`}
+            >
+              <div>
+                <span className="text-[11px] font-semibold text-amber-700 block">
+                  3. Chờ nghiệm thu
+                </span>
+                <span className="text-lg font-bold text-amber-900">
+                  {waitingCount} <span className="text-xs font-normal text-amber-600">dự án</span>
+                </span>
+              </div>
+              <span className="text-xs font-bold text-amber-600 bg-amber-100/80 px-2 py-0.5 rounded-md">
+                85%
+              </span>
+            </Link>
+
+            <Link
+              href="/?stage=completed"
+              className={`group flex items-center justify-between rounded-xl border p-3 transition ${
+                selectedStage === "completed"
+                  ? "border-emerald-300 bg-emerald-50/90 ring-2 ring-emerald-200"
+                  : "border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50 hover:border-emerald-200"
+              }`}
+            >
+              <div>
+                <span className="text-[11px] font-semibold text-emerald-700 block">
+                  4. Đã hoàn thành
+                </span>
+                <span className="text-lg font-bold text-emerald-900">
+                  {completedCount} <span className="text-xs font-normal text-emerald-600">dự án</span>
+                </span>
+              </div>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                100%
+              </span>
+            </Link>
+          </div>
+
+          {/* Workload Progress Distribution Bar */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 mb-1.5">
+              <span>Phân bổ khối lượng tiến độ ({totalActiveProjects} dự án đang triển khai)</span>
+              <span>
+                Tổng cộng: {allProjectsSummary.length} dự án
+              </span>
+            </div>
+            <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                title={`Đang chuẩn bị: ${planningCount}`}
+                style={{ width: `${(planningCount / Math.max(1, allProjectsSummary.length)) * 100}%` }}
+                className="bg-violet-500 transition-all"
+              />
+              <div
+                title={`Đang thực hiện: ${inProgressCount}`}
+                style={{ width: `${(inProgressCount / Math.max(1, allProjectsSummary.length)) * 100}%` }}
+                className="bg-blue-500 transition-all"
+              />
+              <div
+                title={`Chờ nghiệm thu: ${waitingCount}`}
+                style={{ width: `${(waitingCount / Math.max(1, allProjectsSummary.length)) * 100}%` }}
+                className="bg-amber-500 transition-all"
+              />
+              <div
+                title={`Đã hoàn thành: ${completedCount}`}
+                style={{ width: `${(completedCount / Math.max(1, allProjectsSummary.length)) * 100}%` }}
+                className="bg-emerald-500 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Quick Filter Tabs */}
+          <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+            <span className="text-xs font-bold text-slate-600 mr-1">Lọc nhanh:</span>
+            <Link
+              href="/"
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                selectedStage === "all"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              Tất cả ({allProjectsSummary.length})
+            </Link>
+            <Link
+              href="/?stage=in_progress"
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                selectedStage === "in_progress"
+                  ? "bg-blue-600 text-white shadow-2xs"
+                  : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+              }`}
+            >
+              Đang làm ({inProgressCount})
+            </Link>
+            <Link
+              href="/?stage=planning"
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                selectedStage === "planning"
+                  ? "bg-violet-600 text-white shadow-2xs"
+                  : "bg-violet-50 text-violet-700 hover:bg-violet-100"
+              }`}
+            >
+              Đang chuẩn bị ({planningCount})
+            </Link>
+            <Link
+              href="/?stage=waiting"
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                selectedStage === "waiting"
+                  ? "bg-amber-600 text-white shadow-2xs"
+                  : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+              }`}
+            >
+              Chờ nghiệm thu ({waitingCount})
+            </Link>
+            {(overdueProjects.length > 0 || dueSoonProjects.length > 0) && (
+              <Link
+                href="/?stage=urgent"
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                  selectedStage === "urgent"
+                    ? "bg-red-600 text-white shadow-2xs"
+                    : "bg-red-50 text-red-700 hover:bg-red-100"
+                }`}
+              >
+                🚨 Cần chú ý ({overdueProjects.length + dueSoonProjects.length})
+              </Link>
+            )}
+            <Link
+              href="/?stage=completed"
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                selectedStage === "completed"
+                  ? "bg-emerald-600 text-white shadow-2xs"
+                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              }`}
+            >
+              Hoàn thành ({completedCount})
+            </Link>
+          </div>
         </div>
 
-        {recentProjects.length === 0 ? (
+        {dashboardProjects.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="text-xs text-slate-500">Chưa có dự án nào.</p>
+            <p className="text-xs text-slate-500">
+              Không có dự án nào trong mục này.
+            </p>
             <Link
               href="/projects/new"
               className="mt-3 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700"
             >
-              + Tạo dự án đầu tiên
+              + Tạo dự án mới
             </Link>
           </div>
         ) : (
@@ -665,17 +967,18 @@ export default async function DashboardPage() {
             <table className="w-full text-left">
               <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                 <tr>
-                  <th className="px-5 py-3.5">Mã & Tên dự án</th>
-                  <th className="px-5 py-3.5">Khách hàng</th>
-                  <th className="px-5 py-3.5">Hạn hoàn thành & Deadline</th>
-                  <th className="px-5 py-3.5">Tiến độ thanh toán</th>
-                  <th className="px-5 py-3.5">Trạng thái</th>
-                  <th className="px-5 py-3.5 text-right">Thao tác</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">Mã & Tên dự án</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">Khách hàng</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">Tiến độ công việc</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">Hạn hoàn thành</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">Tiến độ thanh toán</th>
+                  <th className="px-5 py-3.5 whitespace-nowrap">Trạng thái</th>
+                  <th className="px-5 py-3.5 text-right whitespace-nowrap">Thao tác</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-slate-200">
-                {recentProjects.map((project) => {
+                {dashboardProjects.map((project) => {
                   const customerName =
                     project.customers?.company_name ||
                     project.customers?.full_name ||
@@ -683,6 +986,22 @@ export default async function DashboardPage() {
 
                   const actualVal = Number(project.actual_value ?? 0);
                   const paidVal = Number(project.paid_amount ?? 0);
+
+                  const progress = getProjectProgress(project.status);
+
+                  const totalItems = project.project_items.length;
+                  const purchasedItems = project.project_items.filter(
+                    (i) => i.purchase_status === "purchased",
+                  ).length;
+
+                  const itemStatusColor =
+                    totalItems === 0
+                      ? "bg-slate-50 text-slate-500 border-slate-200"
+                      : purchasedItems === totalItems
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : purchasedItems > 0
+                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                      : "bg-slate-100 text-slate-600 border-slate-200";
 
                   return (
                     <tr
@@ -696,12 +1015,15 @@ export default async function DashboardPage() {
                         >
                           {formatProjectTitle(project.project_name)}
                         </Link>
-                        <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold">
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
                           <span className="rounded bg-blue-50 px-1.5 py-0.5 text-blue-700 border border-blue-200">
                             {project.project_code}
                           </span>
-                          <span className="text-slate-500 font-medium">
-                            📦 {project._count.project_items} linh kiện
+                          <span
+                            className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 border ${itemStatusColor}`}
+                            title={`Linh kiện đã mua/chuẩn bị: ${purchasedItems}/${totalItems}`}
+                          >
+                            📦 {totalItems > 0 ? `${purchasedItems}/${totalItems} linh kiện` : "0 linh kiện"}
                           </span>
                         </div>
                       </td>
@@ -710,7 +1032,7 @@ export default async function DashboardPage() {
                         {project.customers ? (
                           <Link
                             href={`/customers/${project.customers.id}`}
-                            className="text-sm font-semibold text-slate-800 hover:text-blue-600 hover:underline block"
+                            className="text-xs font-semibold text-slate-800 hover:text-blue-600 hover:underline block"
                           >
                             {customerName}
                           </Link>
@@ -719,7 +1041,29 @@ export default async function DashboardPage() {
                         )}
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <div className="w-40 space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-bold ${progress.badgeColor}`}>
+                              {progress.label}
+                            </span>
+                            <span className="font-bold text-slate-800 text-[11px] tabular-nums">
+                              {progress.percent}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 border border-slate-200/60">
+                            <div
+                              className={`h-full transition-all duration-500 ${progress.barColor}`}
+                              style={{ width: `${progress.percent}%` }}
+                            />
+                          </div>
+                          <p className="text-[10px] text-slate-400 font-medium truncate">
+                            {progress.subLabel}
+                          </p>
+                        </div>
+                      </td>
+
+                      <td className="px-5 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           <span className="text-xs font-semibold text-slate-800 tabular-nums">
                             📅 {formatDate(project.due_date)}
@@ -742,14 +1086,14 @@ export default async function DashboardPage() {
                         />
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 whitespace-nowrap">
                         <ProjectStatusSelect
                           projectId={project.id}
                           currentStatus={project.status}
                         />
                       </td>
 
-                      <td className="px-5 py-4 text-right">
+                      <td className="px-5 py-4 text-right whitespace-nowrap">
                         <Link
                           href={`/projects/${project.id}`}
                           className="inline-flex rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-300 shadow-2xs"
