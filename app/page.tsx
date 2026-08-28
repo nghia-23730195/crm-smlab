@@ -359,6 +359,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       },
       orderBy: [
         {
+          project_code: "desc",
+        },
+        {
           created_at: "desc",
         },
       ],
@@ -967,18 +970,19 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             <table className="w-full text-left">
               <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                 <tr>
-                  <th className="px-5 py-3.5 whitespace-nowrap">Mã & Tên dự án</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">Khách hàng</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">Tiến độ công việc</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">Hạn hoàn thành</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">Tiến độ thanh toán</th>
-                  <th className="px-5 py-3.5 whitespace-nowrap">Trạng thái</th>
-                  <th className="px-5 py-3.5 text-right whitespace-nowrap">Thao tác</th>
+                  <th className="px-3.5 py-3.5 text-center whitespace-nowrap text-slate-400 w-10">STT</th>
+                  <th className="px-4 py-3.5 whitespace-nowrap">Mã & Tên dự án</th>
+                  <th className="px-4 py-3.5 whitespace-nowrap">Khách hàng</th>
+                  <th className="px-4 py-3.5 whitespace-nowrap">Tiến độ công việc</th>
+                  <th className="px-4 py-3.5 whitespace-nowrap">Hạn hoàn thành</th>
+                  <th className="px-4 py-3.5 whitespace-nowrap">Tiến độ thanh toán</th>
+                  <th className="px-4 py-3.5 whitespace-nowrap">Trạng thái</th>
+                  <th className="px-4 py-3.5 text-right whitespace-nowrap">Thao tác</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-slate-200">
-                {dashboardProjects.map((project) => {
+                {dashboardProjects.map((project, index) => {
                   const customerName =
                     project.customers?.company_name ||
                     project.customers?.full_name ||
@@ -1008,7 +1012,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       key={project.id}
                       className="bg-white transition hover:bg-slate-50/80"
                     >
-                      <td className="px-5 py-4">
+                      <td className="px-3.5 py-4 text-center text-xs font-bold text-slate-400 whitespace-nowrap">
+                        {index + 1}
+                      </td>
+
+                      <td className="px-4 py-4">
                         <Link
                           href={`/projects/${project.id}`}
                           className="font-semibold text-slate-900 hover:text-blue-600 transition text-[13.5px] leading-snug block"

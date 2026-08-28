@@ -30,6 +30,7 @@ type ProjectsPageProps = {
     customer?: string;
     year?: string;
     deadline?: string;
+    sort?: string;
     view?: string;
     success?: string;
     error?: string;
@@ -81,6 +82,7 @@ export default async function ProjectsPage({
   const selectedStatus = String(params.status ?? "all").trim();
   const selectedCustomer = String(params.customer ?? "all").trim();
   const selectedDeadline = String(params.deadline ?? "all").trim();
+  const selectedSort = String(params.sort ?? "code_desc").trim();
   const selectedYear = params.year ? String(params.year).trim() : String(currentSystemYear);
   const currentView = params.view === "kanban" ? "kanban" : "list";
 
@@ -108,6 +110,25 @@ export default async function ProjectsPage({
           },
         }
       : {};
+
+  let projectOrderBy: Record<string, "asc" | "desc">[] = [
+    { project_code: "desc" },
+    { created_at: "desc" },
+  ];
+
+  if (selectedSort === "created_desc") {
+    projectOrderBy = [{ created_at: "desc" }, { project_code: "desc" }];
+  } else if (selectedSort === "created_asc") {
+    projectOrderBy = [{ created_at: "asc" }, { project_code: "asc" }];
+  } else if (selectedSort === "code_asc") {
+    projectOrderBy = [{ project_code: "asc" }];
+  } else if (selectedSort === "code_desc") {
+    projectOrderBy = [{ project_code: "desc" }];
+  } else if (selectedSort === "due_asc") {
+    projectOrderBy = [{ due_date: "asc" }, { created_at: "desc" }];
+  } else if (selectedSort === "value_desc") {
+    projectOrderBy = [{ actual_value: "desc" }, { created_at: "desc" }];
+  }
 
   const [rawProjects, customers, allProjectsSummary] = await Promise.all([
     prisma.projects.findMany({
@@ -202,14 +223,7 @@ export default async function ProjectsPage({
         },
       },
 
-      orderBy: [
-        {
-          due_date: "asc",
-        },
-        {
-          created_at: "desc",
-        },
-      ],
+      orderBy: projectOrderBy,
     }),
 
     prisma.customers.findMany({
@@ -301,7 +315,8 @@ export default async function ProjectsPage({
     selectedStatus !== "all" ||
     selectedCustomer !== "all" ||
     selectedDeadline !== "all" ||
-    selectedYear !== String(currentSystemYear);
+    selectedYear !== String(currentSystemYear) ||
+    selectedSort !== "code_desc";
 
   // Prepare CSV Export rows
   const csvHeaders = [
@@ -527,6 +542,20 @@ export default async function ProjectsPage({
               ))}
             </select>
 
+            {/* Sort Selector */}
+            <select
+              name="sort"
+              defaultValue={selectedSort}
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+            >
+              <option value="code_desc">🔢 Mã DA (Z → A)</option>
+              <option value="code_asc">🔢 Mã DA (A → Z)</option>
+              <option value="created_desc">⏱️ Mới nhất</option>
+              <option value="created_asc">⏱️ Cũ nhất</option>
+              <option value="due_asc">📅 Hạn hoàn thành (Gần nhất)</option>
+              <option value="value_desc">💰 Giá trị (Cao → Thấp)</option>
+            </select>
+
             <button
               type="submit"
               className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-4 py-2 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
@@ -569,22 +598,22 @@ export default async function ProjectsPage({
               </div>
             ) : (
               <div className="w-full overflow-x-auto">
-                <table className="w-full min-w-[1300px] text-left">
-                  <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                     <tr>
-                      <th className="px-5 py-4">Mã & Tên dự án</th>
-                      <th className="px-5 py-4">Khách hàng</th>
-                      <th className="px-5 py-4">Hạn hoàn thành & Deadline</th>
-                      <th className="px-5 py-4">Giá trị hợp đồng</th>
-                      <th className="px-5 py-4">Tiến độ thanh toán</th>
-                      <th className="px-5 py-4">Linh kiện (BOM)</th>
-                      <th className="px-5 py-4">Trạng thái</th>
-                      <th className="px-5 py-4 text-right">Thao tác</th>
+                      <th className="px-3 py-3.5 text-center whitespace-nowrap text-slate-400 w-10">STT</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Mã & Tên dự án</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Khách hàng</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Hạn hoàn thành</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Giá trị & Thanh toán</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Linh kiện (BOM)</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Trạng thái</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap">Thao tác</th>
                     </tr>
                   </thead>
 
                   <tbody className="divide-y divide-slate-200">
-                    {projects.map((project) => {
+                    {projects.map((project, index) => {
                       const customerName =
                         project.customers?.company_name ||
                         project.customers?.full_name ||
@@ -592,7 +621,6 @@ export default async function ProjectsPage({
 
                       const actualVal = Number(project.actual_value ?? 0);
                       const paidVal = Number(project.paid_amount ?? 0);
-                      const remainingDebt = Math.max(0, actualVal - paidVal);
 
                       const deadlineInfo = getDeadlineInfo(project.due_date, project.status);
 
@@ -603,7 +631,11 @@ export default async function ProjectsPage({
                             deadlineInfo.isOverdue ? "bg-red-50/20" : ""
                           }`}
                         >
-                          <td className="px-5 py-4">
+                          <td className="px-3 py-4 text-center text-xs font-bold text-slate-400 whitespace-nowrap">
+                            {index + 1}
+                          </td>
+
+                          <td className="px-4 py-4">
                             <Link
                               href={`/projects/${project.id}`}
                               className="font-semibold text-slate-900 hover:text-blue-600 transition text-[13.5px] leading-snug block"
@@ -622,11 +654,11 @@ export default async function ProjectsPage({
                             </div>
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-4 py-4 whitespace-nowrap">
                             {project.customers ? (
                               <Link
                                 href={`/customers/${project.customers.id}`}
-                                className="text-sm font-semibold text-slate-800 hover:text-blue-600 hover:underline"
+                                className="text-xs font-semibold text-slate-800 hover:text-blue-600 hover:underline"
                               >
                                 {customerName}
                               </Link>
@@ -638,7 +670,7 @@ export default async function ProjectsPage({
                           </td>
 
                           {/* Visual Deadline & Due date cell */}
-                          <td className="px-5 py-4">
+                          <td className="px-4 py-4 whitespace-nowrap">
                             <div className="flex flex-col gap-1">
                               <p className="text-xs font-semibold text-slate-800 tabular-nums">
                                 📅 {formatDate(project.due_date)}
@@ -650,18 +682,7 @@ export default async function ProjectsPage({
                             </div>
                           </td>
 
-                          <td className="px-5 py-4">
-                            <p className="text-sm font-bold text-slate-900 tabular-nums">
-                              {formatCurrency(actualVal)}
-                            </p>
-                            {remainingDebt > 0 && (
-                              <p className="mt-0.5 text-xs text-amber-600 font-semibold tabular-nums">
-                                Còn nợ: {formatCurrency(remainingDebt)}
-                              </p>
-                            )}
-                          </td>
-
-                          <td className="px-5 py-4">
+                          <td className="px-4 py-4 whitespace-nowrap">
                             <QuickPaymentAdjuster
                               projectId={project.id}
                               projectCode={project.project_code}
@@ -672,7 +693,7 @@ export default async function ProjectsPage({
                             />
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-4 py-4 whitespace-nowrap">
                             <Link
                               href={`/projects/${project.id}/items`}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition"
@@ -681,18 +702,18 @@ export default async function ProjectsPage({
                             </Link>
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-4 py-4 whitespace-nowrap">
                             <ProjectStatusSelect
                               projectId={project.id}
                               currentStatus={project.status}
                             />
                           </td>
 
-                          <td className="px-5 py-4 text-right">
+                          <td className="px-4 py-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
                               <Link
                                 href={`/projects/${project.id}`}
-                                className="inline-flex rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                                className="inline-flex rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs"
                               >
                                 Chi tiết
                               </Link>
@@ -700,14 +721,14 @@ export default async function ProjectsPage({
                               <Link
                                 href={`/projects/${project.id}/print`}
                                 title="In báo giá"
-                                className="inline-flex rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                                className="inline-flex rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs"
                               >
                                 🖨️
                               </Link>
 
                               <Link
                                 href={`/projects/${project.id}/edit`}
-                                className="inline-flex rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                                className="inline-flex rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 shadow-2xs"
                               >
                                 Sửa
                               </Link>

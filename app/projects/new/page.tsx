@@ -11,23 +11,45 @@ export default async function NewProjectPage() {
   const { organizationId } =
     await requireCurrentUser();
 
-  const customers = await prisma.customers.findMany({
-    where: {
-      organization_id: organizationId,
-      status: {
-        not: "inactive",
+  const [customers, allProjects] = await Promise.all([
+    prisma.customers.findMany({
+      where: {
+        organization_id: organizationId,
+        status: {
+          not: "inactive",
+        },
       },
-    },
-    select: {
-      id: true,
-      customer_code: true,
-      full_name: true,
-      company_name: true,
-    },
-    orderBy: {
-      customer_code: "asc",
-    },
-  });
+      select: {
+        id: true,
+        customer_code: true,
+        full_name: true,
+        company_name: true,
+      },
+      orderBy: {
+        customer_code: "asc",
+      },
+    }),
+    prisma.projects.findMany({
+      where: {
+        organization_id: organizationId,
+      },
+      select: {
+        project_code: true,
+      },
+    }),
+  ]);
+
+  let maxNum = 0;
+  for (const p of allProjects) {
+    const match = p.project_code.match(/(\d+)/);
+    if (match && match[1]) {
+      const num = parseInt(match[1], 10);
+      if (num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+  const nextCode = `DA-${String(Math.max(maxNum + 1, allProjects.length + 1)).padStart(3, "0")}`;
 
   return (
     <div className="p-5 md:p-8">
@@ -38,8 +60,9 @@ export default async function NewProjectPage() {
         >
           <div className="grid gap-5 md:grid-cols-2">
             <FormField
-              label="Mã dự án"
+              label="Mã dự án (Tự động đánh mã)"
               name="project_code"
+              defaultValue={nextCode}
               placeholder="Ví dụ: DA-001"
               required
             />

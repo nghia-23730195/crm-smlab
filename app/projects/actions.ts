@@ -92,10 +92,6 @@ function getProjectData(formData: FormData) {
     "Số tiền đã thanh toán",
   );
 
-  if (!projectCode) {
-    throw new Error("Vui lòng nhập mã dự án.");
-  }
-
   if (!projectName) {
     throw new Error("Vui lòng nhập tên dự án.");
   }
@@ -144,11 +140,36 @@ export async function createProject(
   const data =
     getProjectData(formData);
 
+  let finalProjectCode = data.projectCode;
+
+  if (!finalProjectCode) {
+    const allProjects = await prisma.projects.findMany({
+      where: {
+        organization_id: organizationId,
+      },
+      select: {
+        project_code: true,
+      },
+    });
+
+    let maxNum = 0;
+    for (const p of allProjects) {
+      const match = p.project_code.match(/(\d+)/);
+      if (match && match[1]) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) {
+          maxNum = num;
+        }
+      }
+    }
+    finalProjectCode = `DA-${String(Math.max(maxNum + 1, allProjects.length + 1)).padStart(3, "0")}`;
+  }
+
   const duplicateProject =
     await prisma.projects.findFirst({
       where: {
         organization_id: organizationId,
-        project_code: data.projectCode,
+        project_code: finalProjectCode,
       },
       select: {
         id: true,
@@ -157,7 +178,7 @@ export async function createProject(
 
   if (duplicateProject) {
     throw new Error(
-      `Mã dự án ${data.projectCode} đã tồn tại.`,
+      `Mã dự án ${finalProjectCode} đã tồn tại.`,
     );
   }
 
@@ -183,7 +204,7 @@ export async function createProject(
   const newProject = await prisma.projects.create({
     data: {
       organization_id: organizationId,
-      project_code: data.projectCode,
+      project_code: finalProjectCode,
       project_name: data.projectName,
       customer_id: data.customerId || null,
       project_type: data.projectType || null,
