@@ -223,6 +223,26 @@ export async function createProject(
     },
   });
 
+  const initialPaid = Number(data.paidAmount ?? 0);
+  if (initialPaid > 0) {
+    const transactionCode = `THU-${finalProjectCode}-${Math.floor(1000 + Math.random() * 9000)}`;
+    await prisma.transactions.create({
+      data: {
+        organization_id: organizationId,
+        transaction_code: transactionCode,
+        transaction_type: "income",
+        category: "Cọc dự án",
+        amount: initialPaid,
+        payment_method: "transfer",
+        customer_id: data.customerId || null,
+        project_id: newProject.id,
+        description: `Thu tiền cọc / thanh toán dự án ${finalProjectCode} - ${data.projectName}`,
+        transaction_date: data.startDate ?? new Date(),
+        created_by: userId,
+      },
+    });
+  }
+
   await recordActivity({
     organizationId,
     userId,
@@ -236,6 +256,7 @@ export async function createProject(
   });
 
   revalidatePath("/projects");
+  revalidatePath("/finance");
   revalidatePath("/reports");
   revalidatePath("/");
 
@@ -260,6 +281,7 @@ export async function updateProject(
       },
       select: {
         id: true,
+        paid_amount: true,
       },
     });
 
@@ -331,6 +353,28 @@ export async function updateProject(
     },
   });
 
+  const oldPaid = Number(currentProject.paid_amount ?? 0);
+  const newPaid = Number(data.paidAmount ?? 0);
+  const diff = newPaid - oldPaid;
+  if (diff > 0) {
+    const transactionCode = `THU-${data.projectCode}-${Math.floor(1000 + Math.random() * 9000)}`;
+    await prisma.transactions.create({
+      data: {
+        organization_id: organizationId,
+        transaction_code: transactionCode,
+        transaction_type: "income",
+        category: oldPaid === 0 ? "Cọc dự án" : "Thanh toán dự án",
+        amount: diff,
+        payment_method: "transfer",
+        customer_id: data.customerId || null,
+        project_id: projectId,
+        description: `Thu tiền dự án ${data.projectCode} - ${data.projectName}`,
+        transaction_date: new Date(),
+        created_by: userId,
+      },
+    });
+  }
+
   await recordActivity({
     organizationId,
     userId,
@@ -345,6 +389,7 @@ export async function updateProject(
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${projectId}/edit`);
+  revalidatePath("/finance");
   revalidatePath("/reports");
   revalidatePath("/");
 
