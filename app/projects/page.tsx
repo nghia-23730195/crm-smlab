@@ -476,7 +476,7 @@ export default async function ProjectsPage({
           <form
             action="/projects"
             method="GET"
-            className="mt-4 flex flex-wrap items-center gap-2.5 pt-4 border-t border-slate-100"
+            className="mt-4 flex flex-wrap items-center gap-2 pt-4 border-t border-slate-100"
           >
             <input type="hidden" name="view" value={currentView} />
 
@@ -484,15 +484,15 @@ export default async function ProjectsPage({
               type="search"
               name="q"
               defaultValue={keyword}
-              placeholder="Tìm mã, tên dự án, ghi chú..."
-              className="w-48 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Tìm mã, tên dự án..."
+              className="w-40 sm:w-44 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
 
             {/* Status Selector */}
             <select
               name="status"
               defaultValue={selectedStatus}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+              className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
               <option value="all">Tất cả trạng thái</option>
               {validStatuses.map((st) => (
@@ -506,7 +506,7 @@ export default async function ProjectsPage({
             <select
               name="deadline"
               defaultValue={selectedDeadline}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+              className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
               <option value="all">Tất cả thời hạn</option>
               <option value="overdue">🚨 Quá hạn ({overdueProjectsCount})</option>
@@ -518,7 +518,7 @@ export default async function ProjectsPage({
             <select
               name="year"
               defaultValue={selectedYear}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+              className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
               <option value="all">Tất cả các năm</option>
               {yearOptions.map((y) => (
@@ -532,7 +532,7 @@ export default async function ProjectsPage({
             <select
               name="customer"
               defaultValue={selectedCustomer}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500 max-w-[200px]"
+              className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500 max-w-[160px]"
             >
               <option value="all">Tất cả khách hàng</option>
               {customers.map((customer) => (
@@ -546,19 +546,19 @@ export default async function ProjectsPage({
             <select
               name="sort"
               defaultValue={selectedSort}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+              className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
               <option value="code_desc">🔢 Mã DA (Z → A)</option>
               <option value="code_asc">🔢 Mã DA (A → Z)</option>
               <option value="created_desc">⏱️ Mới nhất</option>
               <option value="created_asc">⏱️ Cũ nhất</option>
-              <option value="due_asc">📅 Hạn hoàn thành (Gần nhất)</option>
+              <option value="due_asc">📅 Hạn hoàn thành</option>
               <option value="value_desc">💰 Giá trị (Cao → Thấp)</option>
             </select>
 
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-4 py-2 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-3.5 py-1.5 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
             >
               🔍 Lọc
             </button>
@@ -566,7 +566,7 @@ export default async function ProjectsPage({
             {hasFilters && (
               <Link
                 href={`/projects?view=${currentView}`}
-                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
+                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
               >
                 Xóa lọc
               </Link>
@@ -598,17 +598,17 @@ export default async function ProjectsPage({
               </div>
             ) : (
               <div className="w-full overflow-x-auto">
-                <table className="w-full text-left">
+                <table className="w-full min-w-[1100px] text-left">
                   <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                     <tr>
                       <th className="px-3 py-3.5 text-center whitespace-nowrap text-slate-400 w-10">STT</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Mã & Tên dự án</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Khách hàng</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Hạn hoàn thành</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Giá trị & Thanh toán</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Linh kiện (BOM)</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Trạng thái</th>
-                      <th className="px-4 py-3.5 text-right whitespace-nowrap">Thao tác</th>
+                      <th className="px-3.5 py-3.5 whitespace-nowrap">Mã & Tên dự án</th>
+                      <th className="px-3.5 py-3.5 whitespace-nowrap">Khách hàng</th>
+                      <th className="px-3.5 py-3.5 whitespace-nowrap">Hạn hoàn thành</th>
+                      <th className="px-3.5 py-3.5 whitespace-nowrap">Giá trị & Thanh toán</th>
+                      <th className="px-3.5 py-3.5 whitespace-nowrap">Linh kiện (BOM)</th>
+                      <th className="px-3.5 py-3.5 whitespace-nowrap">Trạng thái</th>
+                      <th className="px-3.5 py-3.5 text-right whitespace-nowrap">Thao tác</th>
                     </tr>
                   </thead>
 
@@ -631,11 +631,11 @@ export default async function ProjectsPage({
                             deadlineInfo.isOverdue ? "bg-red-50/20" : ""
                           }`}
                         >
-                          <td className="px-3 py-4 text-center text-xs font-bold text-slate-400 whitespace-nowrap">
+                          <td className="px-3 py-3.5 text-center text-xs font-bold text-slate-400 whitespace-nowrap">
                             {index + 1}
                           </td>
 
-                          <td className="px-4 py-4">
+                          <td className="px-3.5 py-3.5">
                             <Link
                               href={`/projects/${project.id}`}
                               className="font-semibold text-slate-900 hover:text-blue-600 transition text-[13.5px] leading-snug block"
@@ -654,7 +654,7 @@ export default async function ProjectsPage({
                             </div>
                           </td>
 
-                          <td className="px-4 py-4 whitespace-nowrap">
+                          <td className="px-3.5 py-3.5 whitespace-nowrap">
                             {project.customers ? (
                               <Link
                                 href={`/customers/${project.customers.id}`}
@@ -670,7 +670,7 @@ export default async function ProjectsPage({
                           </td>
 
                           {/* Visual Deadline & Due date cell */}
-                          <td className="px-4 py-4 whitespace-nowrap">
+                          <td className="px-3.5 py-3.5 whitespace-nowrap">
                             <div className="flex flex-col gap-1">
                               <p className="text-xs font-semibold text-slate-800 tabular-nums">
                                 📅 {formatDate(project.due_date)}
@@ -682,7 +682,7 @@ export default async function ProjectsPage({
                             </div>
                           </td>
 
-                          <td className="px-4 py-4 whitespace-nowrap">
+                          <td className="px-3.5 py-3.5 whitespace-nowrap">
                             <QuickPaymentAdjuster
                               projectId={project.id}
                               projectCode={project.project_code}
@@ -693,23 +693,23 @@ export default async function ProjectsPage({
                             />
                           </td>
 
-                          <td className="px-4 py-4 whitespace-nowrap">
+                          <td className="px-3.5 py-3.5 whitespace-nowrap">
                             <Link
                               href={`/projects/${project.id}/items`}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition"
                             >
                               📦 {project._count.project_items} linh kiện
                             </Link>
                           </td>
 
-                          <td className="px-4 py-4 whitespace-nowrap">
+                          <td className="px-3.5 py-3.5 whitespace-nowrap">
                             <ProjectStatusSelect
                               projectId={project.id}
                               currentStatus={project.status}
                             />
                           </td>
 
-                          <td className="px-4 py-4 text-right whitespace-nowrap">
+                          <td className="px-3.5 py-3.5 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
                               <Link
                                 href={`/projects/${project.id}`}
