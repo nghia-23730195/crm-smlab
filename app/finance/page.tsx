@@ -254,6 +254,9 @@ export default async function FinancePage({
           transaction_date: "desc",
         },
         {
+          transaction_code: "desc",
+        },
+        {
           created_at: "desc",
         },
       ],

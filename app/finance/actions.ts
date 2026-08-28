@@ -85,10 +85,6 @@ function getTransactionData(formData: FormData) {
     "attachment_url",
   );
 
-  if (!transactionCode) {
-    throw new Error("Vui lòng nhập mã giao dịch.");
-  }
-
   if (
     !VALID_TRANSACTION_TYPES.includes(
       transactionType,
@@ -119,6 +115,31 @@ function getTransactionData(formData: FormData) {
     description,
     attachmentUrl,
   };
+}
+
+export async function getNextTransactionCode(
+  organizationId: string,
+): Promise<string> {
+  const allTransactions = await prisma.transactions.findMany({
+    where: {
+      organization_id: organizationId,
+    },
+    select: {
+      transaction_code: true,
+    },
+  });
+
+  let maxNum = 0;
+  for (const t of allTransactions) {
+    const match = t.transaction_code.match(/(\d+)/);
+    if (match && match[1]) {
+      const num = parseInt(match[1], 10);
+      if (num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+  return `GD-${String(Math.max(maxNum + 1, allTransactions.length + 1)).padStart(3, "0")}`;
 }
 
 async function validateRelations(
@@ -180,18 +201,23 @@ async function validateRelations(
 export async function createTransaction(
   formData: FormData,
 ) {
-  const { organizationId } =
+  const { organizationId, userId } =
     await requireCurrentUser();
 
   const data =
     getTransactionData(formData);
+
+  let finalTransactionCode = data.transactionCode;
+  if (!finalTransactionCode) {
+    finalTransactionCode = await getNextTransactionCode(organizationId);
+  }
 
   const duplicate =
     await prisma.transactions.findFirst({
       where: {
         organization_id:
           organizationId,
-        transaction_code: data.transactionCode,
+        transaction_code: finalTransactionCode,
       },
       select: {
         id: true,
@@ -200,7 +226,7 @@ export async function createTransaction(
 
   if (duplicate) {
     throw new Error(
-      `Mã giao dịch ${data.transactionCode} đã tồn tại.`,
+      `Mã giao dịch ${finalTransactionCode} đã tồn tại.`,
     );
   }
 
@@ -216,7 +242,7 @@ export async function createTransaction(
         organizationId,
 
       transaction_code:
-        data.transactionCode,
+        finalTransactionCode,
 
       project_id:
         data.projectId || null,
@@ -245,8 +271,7 @@ export async function createTransaction(
       attachment_url:
         data.attachmentUrl || null,
 
-      created_by:
-        null,
+      created_by: userId,
     },
   });
 

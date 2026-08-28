@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { recordActivity } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
+import { getNextTransactionCode } from "@/app/finance/actions";
 
 type ProjectStatus =
   | "draft"
@@ -225,7 +226,7 @@ export async function createProject(
 
   const initialPaid = Number(data.paidAmount ?? 0);
   if (initialPaid > 0) {
-    const transactionCode = `THU-${finalProjectCode}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const transactionCode = await getNextTransactionCode(organizationId);
     await prisma.transactions.create({
       data: {
         organization_id: organizationId,
@@ -357,7 +358,7 @@ export async function updateProject(
   const newPaid = Number(data.paidAmount ?? 0);
   const diff = newPaid - oldPaid;
   if (diff > 0) {
-    const transactionCode = `THU-${data.projectCode}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const transactionCode = await getNextTransactionCode(organizationId);
     await prisma.transactions.create({
       data: {
         organization_id: organizationId,
@@ -572,18 +573,19 @@ export async function updateProjectPayment(
 
   // Tự động tạo phiếu thu vào sổ quỹ tài chính nếu số tiền thanh toán tăng lên
   if (syncToFinance && diff > 0) {
-    const transactionCode = `THU-${project.project_code}-${Date.now().toString().slice(-4)}`;
+    const transactionCode = await getNextTransactionCode(organizationId);
     await prisma.transactions.create({
       data: {
         organization_id: organizationId,
         transaction_code: transactionCode,
         transaction_type: "income",
-        category: "Doanh thu dự án",
+        category: oldPaid === 0 ? "Cọc dự án" : "Doanh thu dự án",
         amount: diff,
         payment_method: "transfer",
         customer_id: project.customer_id,
         project_id: projectId,
         description: `Thu tiền dự án ${project.project_code} - ${project.project_name}`,
+        transaction_date: new Date(),
         created_by: userId,
       },
     });

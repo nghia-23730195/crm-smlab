@@ -1,10 +1,9 @@
 import Link from "next/link";
 
-import SubmitButton from "@/components/SubmitButton";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
-import { createTransaction } from "../actions";
+import { createTransaction, getNextTransactionCode } from "../actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,53 +22,68 @@ export default async function NewTransactionPage() {
   const { organizationId } =
     await requireCurrentUser();
 
-  const [projects, customers] =
+  const [projects, customers, nextTransactionCode] =
     await Promise.all([
       prisma.projects.findMany({
         where: {
-          organization_id:
-            organizationId,
-
+          organization_id: organizationId,
           status: {
             not: "cancelled",
           },
         },
-
-        // Giữ nguyên orderBy, select và các phần khác.
+        select: {
+          id: true,
+          project_code: true,
+          project_name: true,
+        },
+        orderBy: {
+          project_code: "asc",
+        },
       }),
 
       prisma.customers.findMany({
         where: {
-          organization_id:
-            organizationId,
-
+          organization_id: organizationId,
           status: {
             not: "inactive",
           },
         },
-      select: {
-        id: true,
-        customer_code: true,
-        full_name: true,
-        company_name: true,
-      },
-      orderBy: {
-        full_name: "asc",
-      },
-    }),
-  ]);
+        select: {
+          id: true,
+          customer_code: true,
+          full_name: true,
+          company_name: true,
+        },
+        orderBy: {
+          customer_code: "asc",
+        },
+      }),
+
+      getNextTransactionCode(organizationId),
+    ]);
 
   return (
     <div className="p-5 md:p-8">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-4xl">
         <form
           action={createTransaction}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-xs"
         >
+          <div className="border-b border-slate-100 pb-5 mb-6">
+            <h2 className="text-lg font-bold text-slate-900">
+              Thêm giao dịch thu / chi mới
+            </h2>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Ghi nhận phiếu thu hoặc phiếu chi vào sổ quỹ tài chính hệ thống.
+            </p>
+          </div>
+
           <div className="grid gap-5 md:grid-cols-2">
             <FormField
-              label="Mã giao dịch"
+              label="Mã giao dịch (Tự động đánh mã)"
               name="transaction_code"
+              defaultValue={nextTransactionCode}
               placeholder="Ví dụ: GD-001"
               required
             />
@@ -82,11 +96,11 @@ export default async function NewTransactionPage() {
               options={[
                 {
                   value: "income",
-                  label: "Khoản thu",
+                  label: "🟢 Khoản thu",
                 },
                 {
                   value: "expense",
-                  label: "Khoản chi",
+                  label: "🔴 Khoản chi",
                 },
               ]}
             />
@@ -94,12 +108,12 @@ export default async function NewTransactionPage() {
             <FormField
               label="Danh mục"
               name="category"
-              placeholder="Ví dụ: Thanh toán dự án"
+              placeholder="Ví dụ: Cọc dự án, Mua linh kiện..."
               required
             />
 
             <FormField
-              label="Số tiền"
+              label="Số tiền (VNĐ)"
               name="amount"
               type="number"
               min="1000"
@@ -148,19 +162,19 @@ export default async function NewTransactionPage() {
             <div>
               <label
                 htmlFor="project_id"
-                className="mb-2 block text-sm font-semibold text-slate-700"
+                className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
               >
-                Dự án
+                Dự án liên kết
               </label>
 
               <select
                 id="project_id"
                 name="project_id"
                 defaultValue=""
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
               >
                 <option value="">
-                  Không gắn với dự án
+                  -- Không gắn với dự án --
                 </option>
 
                 {projects.map((project) => (
@@ -168,8 +182,7 @@ export default async function NewTransactionPage() {
                     key={project.id}
                     value={project.id}
                   >
-                    {project.project_code} -{" "}
-                    {project.project_name}
+                    {project.project_code} - {project.project_name}
                   </option>
                 ))}
               </select>
@@ -178,19 +191,19 @@ export default async function NewTransactionPage() {
             <div>
               <label
                 htmlFor="customer_id"
-                className="mb-2 block text-sm font-semibold text-slate-700"
+                className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
               >
-                Khách hàng
+                Khách hàng liên kết
               </label>
 
               <select
                 id="customer_id"
                 name="customer_id"
                 defaultValue=""
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
               >
                 <option value="">
-                  Không gắn với khách hàng
+                  -- Không gắn với khách hàng --
                 </option>
 
                 {customers.map((customer) => (
@@ -198,15 +211,14 @@ export default async function NewTransactionPage() {
                     key={customer.id}
                     value={customer.id}
                   >
-                    {customer.customer_code} -{" "}
-                    {customer.full_name}
+                    {customer.customer_code} - {customer.full_name}
                   </option>
                 ))}
               </select>
             </div>
 
             <FormField
-              label="Đường dẫn chứng từ"
+              label="Đường dẫn chứng từ (Không bắt buộc)"
               name="attachment_url"
               type="url"
               placeholder="https://..."
@@ -216,32 +228,34 @@ export default async function NewTransactionPage() {
           <div className="mt-5">
             <label
               htmlFor="description"
-              className="mb-2 block text-sm font-semibold text-slate-700"
+              className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
             >
-              Nội dung giao dịch
+              Nội dung & Diễn giải giao dịch
             </label>
 
             <textarea
               id="description"
               name="description"
-              rows={5}
-              placeholder="Nhập nội dung hoặc ghi chú giao dịch"
-              className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              rows={4}
+              placeholder="Nhập nội dung hoặc diễn giải chi tiết cho giao dịch..."
+              className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
             />
           </div>
 
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link
               href="/finance"
-              className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 shadow-2xs cursor-pointer"
             >
               Hủy
             </Link>
 
-            <SubmitButton
-              idleText="Thêm giao dịch"
-              pendingText="Đang thêm..."
-            />
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-6 py-2.5 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
+            >
+              + Thêm giao dịch
+            </button>
           </div>
         </form>
       </div>
@@ -274,7 +288,7 @@ function FormField({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-semibold text-slate-700"
+        className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
       >
         {label}
 
@@ -292,7 +306,7 @@ function FormField({
         required={required}
         min={min}
         step={step}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
       />
     </div>
   );
@@ -322,7 +336,7 @@ function SelectField({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-semibold text-slate-700"
+        className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
       >
         {label}
 
@@ -336,7 +350,7 @@ function SelectField({
         name={name}
         defaultValue={defaultValue}
         required={required}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
       >
         {options.map((option) => (
           <option
