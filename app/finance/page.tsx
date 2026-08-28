@@ -81,7 +81,6 @@ export default async function FinancePage({
 
   const now = new Date();
   const currentSystemYear = now.getUTCFullYear();
-  const currentSystemMonth = now.getUTCMonth() + 1;
 
   const keyword = String(params.q ?? "").trim();
   const selectedType = String(params.type ?? "all").trim();
@@ -434,21 +433,21 @@ export default async function FinancePage({
       {/* 1. Cashflow Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         <SummaryCard
-          label={`Tổng thu (${selectedMonth !== "all" ? `Tháng ${selectedMonth}/` : ""}${selectedYear !== "all" ? selectedYear : "Toàn thời gian"})`}
+          label="Tổng thu"
           value={formatCurrency(totalIncome)}
-          subtext="Doanh thu & tiền thu được"
+          subtext={`Doanh thu ${selectedMonth !== "all" ? `tháng ${selectedMonth}/` : ""}${selectedYear !== "all" ? selectedYear : "toàn thời gian"}`}
           className="text-emerald-700"
         />
 
         <SummaryCard
-          label={`Tổng chi (${selectedMonth !== "all" ? `Tháng ${selectedMonth}/` : ""}${selectedYear !== "all" ? selectedYear : "Toàn thời gian"})`}
+          label="Tổng chi"
           value={formatCurrency(totalExpense)}
-          subtext="Chi phí vật tư, linh kiện & vận hành"
+          subtext={`Chi phí vật tư & vận hành ${selectedMonth !== "all" ? `T${selectedMonth}/` : ""}${selectedYear !== "all" ? selectedYear : ""}`}
           className="text-red-700"
         />
 
         <SummaryCard
-          label={`Lợi nhuận ròng (${selectedMonth !== "all" ? `Tháng ${selectedMonth}/` : ""}${selectedYear !== "all" ? selectedYear : "Toàn thời gian"})`}
+          label="Lợi nhuận ròng"
           value={formatCurrency(profit)}
           subtext={profit >= 0 ? "Dòng tiền dương" : "Dòng tiền âm"}
           className={profit >= 0 ? "text-blue-700" : "text-red-700"}
@@ -459,194 +458,92 @@ export default async function FinancePage({
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 p-5 md:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                Sổ quỹ & Báo cáo tài chính
-              </h2>
+            {/* View Switcher Toggle */}
+            <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
+              <Link
+                href={`/finance?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=ledger`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  currentView === "ledger"
+                    ? "bg-white text-blue-700 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Sổ quỹ giao dịch
+              </Link>
 
-              <p className="mt-0.5 text-xs text-slate-500">
-                Hiển thị {transactions.length} giao dịch • Năm {selectedYear === "all" ? "Tất cả" : selectedYear}
-                {selectedMonth !== "all" ? ` (Tháng ${selectedMonth})` : ""}
-              </p>
+              <Link
+                href={`/finance?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=monthly`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  currentView === "monthly"
+                    ? "bg-white text-blue-700 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Theo 12 Tháng
+              </Link>
+
+              <Link
+                href={`/finance?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=categories`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  currentView === "categories"
+                ? "bg-white text-blue-700 shadow-2xs"
+                : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Báo cáo danh mục
+              </Link>
             </div>
 
-            {/* Actions: View Switcher & Export CSV */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/* View Switcher Toggle */}
-              <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
-                <Link
-                  href={`/finance?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=ledger`}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                    currentView === "ledger"
-                      ? "bg-white text-blue-700 shadow-2xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  Sổ quỹ
-                </Link>
-
-                <Link
-                  href={`/finance?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=monthly`}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                    currentView === "monthly"
-                      ? "bg-white text-blue-700 shadow-2xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Theo 12 Tháng
-                </Link>
-
-                <Link
-                  href={`/finance?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=categories`}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                    currentView === "categories"
-                  ? "bg-white text-blue-700 shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                  Danh mục
-                </Link>
-              </div>
-
-              <ExportCsvButton
-                filename={`so-quy-tai-chinh-${selectedYear}-${selectedMonth}`}
-                headers={csvHeaders}
-                rows={csvRows}
-              />
-            </div>
+            <ExportCsvButton
+              filename={`so-quy-tai-chinh-${selectedYear}-${selectedMonth}`}
+              headers={csvHeaders}
+              rows={csvRows}
+            />
           </div>
 
-          {/* Quick Date / Period Filter Pills */}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold uppercase text-slate-400 mr-1">Thời gian:</span>
-
-            <Link
-              href={`/finance?year=${currentSystemYear}&month=${currentSystemMonth}&type=${selectedType}&view=${currentView}`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                selectedYear === String(currentSystemYear) && selectedMonth === String(currentSystemMonth)
-                  ? "bg-blue-50 text-blue-700 border-blue-300 shadow-2xs"
-                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              Tháng này (T{currentSystemMonth}/{currentSystemYear})
-            </Link>
-
-            <Link
-              href={`/finance?year=${currentSystemMonth === 1 ? currentSystemYear - 1 : currentSystemYear}&month=${currentSystemMonth === 1 ? 12 : currentSystemMonth - 1}&type=${selectedType}&view=${currentView}`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                (currentSystemMonth === 1
-                  ? selectedYear === String(currentSystemYear - 1) && selectedMonth === "12"
-                  : selectedYear === String(currentSystemYear) && selectedMonth === String(currentSystemMonth - 1))
-                  ? "bg-blue-50 text-blue-700 border-blue-300 shadow-2xs"
-                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              Tháng trước
-            </Link>
-
-            <Link
-              href={`/finance?year=${currentSystemYear}&month=all&type=${selectedType}&view=${currentView}`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                selectedYear === String(currentSystemYear) && selectedMonth === "all"
-                  ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              Cả năm {currentSystemYear}
-            </Link>
-
-            <Link
-              href={`/finance?year=${currentSystemYear - 1}&month=all&type=${selectedType}&view=${currentView}`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                selectedYear === String(currentSystemYear - 1) && selectedMonth === "all"
-                  ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              Năm {currentSystemYear - 1}
-            </Link>
-
-            <Link
-              href={`/finance?year=all&month=all&type=${selectedType}&view=${currentView}`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                selectedYear === "all" && selectedMonth === "all"
-                  ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              Toàn thời gian
-            </Link>
-          </div>
-
-          {/* Type Filter Pills */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Link
-              href={`/finance?year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=${currentView}&type=all`}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                selectedType === "all"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              Tất cả loại ({transactions.length})
-            </Link>
-
-            <Link
-              href={`/finance?year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=${currentView}&type=income`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                selectedType === "income"
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-300 shadow-2xs font-bold"
-                  : "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50"
-              }`}
-            >
-              🟢 Khoản thu ({transactions.filter((t) => t.transaction_type === "income").length})
-            </Link>
-
-            <Link
-              href={`/finance?year=${encodeURIComponent(selectedYear)}&month=${encodeURIComponent(selectedMonth)}&project=${encodeURIComponent(selectedProject)}&category=${encodeURIComponent(selectedCategory)}&view=${currentView}&type=expense`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                selectedType === "expense"
-                  ? "bg-rose-50 text-rose-700 border-rose-300 shadow-2xs font-bold"
-                  : "bg-white text-rose-700 border-rose-200 hover:bg-rose-50"
-              }`}
-            >
-              🔴 Khoản chi ({transactions.filter((t) => t.transaction_type === "expense").length})
-            </Link>
-          </div>
-
-          {/* Filter Form with Month, Year, Project, Category */}
+          {/* Unified Compact Filter Toolbar */}
           <form
             action="/finance"
             method="GET"
-            className="mt-4 flex flex-wrap items-center gap-2.5"
+            className="mt-4 flex flex-wrap items-center gap-2.5 pt-4 border-t border-slate-100"
           >
-            <input type="hidden" name="type" value={selectedType} />
             <input type="hidden" name="view" value={currentView} />
 
             <input
               type="search"
               name="q"
               defaultValue={keyword}
-              placeholder="Tìm mã, nội dung..."
-              className="w-44 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Tìm mã, nội dung, ghi chú..."
+              className="w-48 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
+
+            {/* Type Selector */}
+            <select
+              name="type"
+              defaultValue={selectedType}
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+            >
+              <option value="all">Tất cả loại giao dịch</option>
+              <option value="income">🟢 Khoản thu</option>
+              <option value="expense">🔴 Khoản chi</option>
+            </select>
 
             {/* Year Selector */}
             <select
               name="year"
               defaultValue={selectedYear}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
-              <option value="all">Tất cả năm</option>
+              <option value="all">Tất cả các năm</option>
               {yearOptions.map((y) => (
                 <option key={y} value={y}>
                   Năm {y}
@@ -658,9 +555,9 @@ export default async function FinancePage({
             <select
               name="month"
               defaultValue={selectedMonth}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
-              <option value="all">Tất cả tháng</option>
+              <option value="all">Tất cả các tháng</option>
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i + 1} value={i + 1}>
                   Tháng {i + 1}
@@ -672,7 +569,7 @@ export default async function FinancePage({
             <select
               name="category"
               defaultValue={selectedCategory}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500 max-w-[160px]"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500 max-w-[160px]"
             >
               <option value="all">Tất cả danh mục</option>
               {allCategoriesList.map((cat) => (
@@ -686,7 +583,7 @@ export default async function FinancePage({
             <select
               name="project"
               defaultValue={selectedProject}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500 max-w-[180px]"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500 max-w-[180px]"
             >
               <option value="all">Tất cả dự án</option>
               {projects.map((project) => (
@@ -700,13 +597,13 @@ export default async function FinancePage({
               type="submit"
               className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-4 py-2 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
             >
-              🔍 Lọc dữ liệu
+              🔍 Lọc
             </button>
 
             {hasFilters && (
               <Link
                 href={`/finance?view=${currentView}`}
-                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
+                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
               >
                 Xóa lọc
               </Link>
