@@ -23,6 +23,10 @@ function readProductForm(formData: FormData) {
     formData.get("description") ?? "",
   ).trim();
 
+  const imageUrl = String(
+    formData.get("image_url") ?? "",
+  ).trim();
+
   const unit = String(
     formData.get("unit") ?? "",
   ).trim();
@@ -75,6 +79,7 @@ function readProductForm(formData: FormData) {
     name,
     category,
     description,
+    imageUrl: imageUrl || null,
     unit,
     costPrice,
     salePrice,
@@ -110,10 +115,8 @@ export async function createProduct(
 
   await prisma.products.create({
     data: {
-        organization_id:
-            organizationId,
-        product_code:
-            values.productCode,
+      organization_id: organizationId,
+      product_code: values.productCode,
       name: values.name,
       category: values.category || null,
       description: values.description || null,
@@ -122,7 +125,7 @@ export async function createProduct(
       sale_price: values.salePrice,
       stock_quantity: values.stockQuantity,
       minimum_stock: values.minimumStock,
-      image_url: null,
+      image_url: values.imageUrl,
       is_active: values.isActive,
     },
   });
@@ -194,6 +197,7 @@ export async function updateProduct(
       sale_price: values.salePrice,
       stock_quantity: values.stockQuantity,
       minimum_stock: values.minimumStock,
+      image_url: values.imageUrl,
       is_active: values.isActive,
       updated_at: new Date(),
     },

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import ComponentThumbnail from "@/components/ComponentThumbnail";
 import DeleteProductButton from "@/components/DeleteProductButton";
 import ProductStatusToggle from "@/components/ProductStatusToggle";
 import { requireCurrentUser } from "@/lib/auth/current-user";
@@ -435,15 +436,24 @@ export default async function ProductsPage({
                       </td>
 
                       <td className="px-3 py-4">
-                        <p className="truncate font-semibold text-slate-900">
-                          {product.name}
-                        </p>
-
-                        {product.description && (
-                          <p className="mt-1 truncate text-xs text-slate-600">
-                            {product.description}
-                          </p>
-                        )}
+                        <div className="flex items-center gap-3">
+                          <ComponentThumbnail
+                            imageUrl={product.image_url}
+                            name={product.name}
+                            category={product.category}
+                            size="sm"
+                          />
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-slate-900">
+                              {product.name}
+                            </p>
+                            {product.description && (
+                              <p className="mt-0.5 truncate text-xs text-slate-500">
+                                {product.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </td>
 
                       <td className="px-3 py-4 text-sm text-slate-700">

@@ -132,6 +132,15 @@ export default async function EditProductPage({
           </div>
 
           <div className="mt-5">
+            <FormField
+              label="Đường dẫn hình ảnh minh họa (Image URL)"
+              name="image_url"
+              defaultValue={product.image_url ?? ""}
+              placeholder="https://example.com/hinh-linh-kien.jpg (Để trống hệ thống sẽ tự tạo icon minh họa thông minh)"
+            />
+          </div>
+
+          <div className="mt-5">
             <label
               htmlFor="description"
               className="mb-2 block text-sm font-semibold text-slate-700"
@@ -191,6 +200,7 @@ type FormFieldProps = {
   type?: string;
   min?: string;
   defaultValue: string;
+  placeholder?: string;
   required?: boolean;
 };
 
@@ -200,6 +210,7 @@ function FormField({
   type = "text",
   min,
   defaultValue,
+  placeholder,
   required = false,
 }: FormFieldProps) {
   return (
@@ -223,8 +234,9 @@ function FormField({
         type={type}
         min={min}
         defaultValue={defaultValue}
+        placeholder={placeholder}
         required={required}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
       />
     </div>
   );

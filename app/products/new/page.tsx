@@ -95,6 +95,14 @@ export default function NewProductPage() {
           </div>
 
           <div className="mt-5">
+            <FormField
+              label="Đường dẫn hình ảnh minh họa (Image URL)"
+              name="image_url"
+              placeholder="https://example.com/hinh-linh-kien.jpg (Để trống hệ thống sẽ tự tạo icon minh họa thông minh)"
+            />
+          </div>
+
+          <div className="mt-5">
             <label
               htmlFor="description"
               className="mb-2 block text-sm font-semibold text-slate-700"
