@@ -221,14 +221,14 @@ export default async function EditProjectPage({
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link
               href="/projects"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 shadow-2xs cursor-pointer"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 shadow-2xs cursor-pointer"
             >
               Hủy
             </Link>
 
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 active:scale-95 transition cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-6 py-2.5 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
             >
               💾 Lưu thay đổi
             </button>
