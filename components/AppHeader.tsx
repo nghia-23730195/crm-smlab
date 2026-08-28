@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import GlobalSearchModal from "@/components/GlobalSearchModal";
+import NotificationBell from "@/components/NotificationBell";
 
 type PageInformation = {
   title: string;
@@ -266,8 +267,9 @@ export default function AppHeader({ onOpenMobileNav }: AppHeaderProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         <GlobalSearchModal />
+        <NotificationBell />
 
         {currentPage.actionLabel && currentPage.actionHref && (
           <Link

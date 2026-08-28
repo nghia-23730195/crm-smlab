@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireCurrentUser } from "@/lib/auth/current-user";
+import { recordActivity } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
 
 type CustomerStatus =
@@ -335,11 +336,28 @@ export async function changeCustomerStatus(
   customerId: string,
   newStatus: CustomerStatus,
 ) {
-  const { organizationId } =
+  const { organizationId, userId } =
     await requireCurrentUser();
 
   if (!VALID_STATUSES.includes(newStatus)) {
     throw new Error("Trạng thái khách hàng không hợp lệ.");
+  }
+
+  const customer = await prisma.customers.findFirst({
+    where: {
+      id: customerId,
+      organization_id: organizationId,
+    },
+    select: {
+      id: true,
+      full_name: true,
+      customer_code: true,
+      status: true,
+    },
+  });
+
+  if (!customer) {
+    throw new Error("Không tìm thấy khách hàng.");
   }
 
   await prisma.customers.updateMany({
@@ -350,6 +368,22 @@ export async function changeCustomerStatus(
     data: {
       status: newStatus,
       updated_at: new Date(),
+    },
+  });
+
+  await recordActivity({
+    organizationId,
+    userId,
+    action: "change_status",
+    entityType: "customer",
+    entityId: customerId,
+    newData: {
+      full_name: customer.full_name,
+      customer_code: customer.customer_code,
+      status: newStatus,
+    },
+    oldData: {
+      status: customer.status,
     },
   });
 

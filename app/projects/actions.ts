@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireCurrentUser } from "@/lib/auth/current-user";
+import { recordActivity } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
 
 type ProjectStatus =
@@ -137,7 +138,7 @@ function getProjectData(formData: FormData) {
 export async function createProject(
   formData: FormData,
 ) {
-  const { organizationId } =
+  const { organizationId, userId } =
     await requireCurrentUser();
 
   const data =
@@ -179,7 +180,7 @@ export async function createProject(
     }
   }
 
-  await prisma.projects.create({
+  const newProject = await prisma.projects.create({
     data: {
       organization_id: organizationId,
       project_code: data.projectCode,
@@ -201,6 +202,18 @@ export async function createProject(
     },
   });
 
+  await recordActivity({
+    organizationId,
+    userId,
+    action: "create",
+    entityType: "project",
+    entityId: newProject.id,
+    newData: {
+      project_name: data.projectName,
+      project_code: data.projectCode,
+    },
+  });
+
   revalidatePath("/projects");
   revalidatePath("/reports");
   revalidatePath("/");
@@ -212,7 +225,7 @@ export async function updateProject(
   projectId: string,
   formData: FormData,
 ) {
-  const { organizationId } =
+  const { organizationId, userId } =
     await requireCurrentUser();
 
   const data =
@@ -297,6 +310,18 @@ export async function updateProject(
     },
   });
 
+  await recordActivity({
+    organizationId,
+    userId,
+    action: "update",
+    entityType: "project",
+    entityId: projectId,
+    newData: {
+      project_name: data.projectName,
+      project_code: data.projectCode,
+    },
+  });
+
   revalidatePath("/projects");
   revalidatePath(`/projects/${projectId}/edit`);
   revalidatePath("/reports");
@@ -309,7 +334,7 @@ export async function changeProjectStatus(
   projectId: string,
   nextStatus: ProjectStatus,
 ) {
-  const { organizationId } =
+  const { organizationId, userId } =
     await requireCurrentUser();
 
   if (!VALID_STATUSES.includes(nextStatus)) {
@@ -327,6 +352,9 @@ export async function changeProjectStatus(
       },
       select: {
         id: true,
+        project_name: true,
+        project_code: true,
+        status: true,
       },
     });
 
@@ -350,13 +378,29 @@ export async function changeProjectStatus(
     },
   });
 
+  await recordActivity({
+    organizationId,
+    userId,
+    action: "change_status",
+    entityType: "project",
+    entityId: projectId,
+    newData: {
+      project_name: project.project_name,
+      project_code: project.project_code,
+      status: nextStatus,
+    },
+    oldData: {
+      status: project.status,
+    },
+  });
+
   revalidatePath("/projects");
   revalidatePath("/reports");
   revalidatePath("/");
 }
 
 export async function deleteProject(projectId: string) {
-  const { organizationId } =
+  const { organizationId, userId } =
     await requireCurrentUser();
 
   const project = await prisma.projects.findFirst({
@@ -399,6 +443,18 @@ export async function deleteProject(projectId: string) {
         id: projectId,
       },
     });
+  });
+
+  await recordActivity({
+    organizationId,
+    userId,
+    action: "delete",
+    entityType: "project",
+    entityId: projectId,
+    newData: {
+      project_name: project.project_name,
+      project_code: project.project_code,
+    },
   });
 
   revalidatePath("/projects");
