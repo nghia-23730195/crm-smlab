@@ -392,71 +392,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-5 md:p-8 space-y-6">
-      {/* 1. Quick Action Header */}
-      <section className="rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 p-6 text-white shadow-sm">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur-xs">
-              ⚡ Trung tâm điều hành
-            </span>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight">
-              Chào mừng trở lại SM-LAB CRM
-            </h1>
-            <p className="mt-1 text-sm text-blue-100">
-              Quản lý nhanh khách hàng, dự án, kho hàng và dòng tiền trong một giao diện
-            </p>
-          </div>
-
-          {/* 4 Quick Actions */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Link
-              href="/customers/new"
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 active:scale-95"
-            >
-              <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
-              + Khách hàng
-            </Link>
-
-            <Link
-              href="/projects/new"
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 active:scale-95"
-            >
-              <svg className="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              + Tạo dự án
-            </Link>
-
-            <Link
-              href="/inventory/movements/new"
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 active:scale-95"
-            >
-              <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-              + Phiếu kho
-            </Link>
-
-            <Link
-              href="/finance/new"
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-blue-50 active:scale-95"
-            >
-              <svg className="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              + Thu / Chi
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Smart Operational Alerts */}
+      {/* 1. Smart Operational Alerts */}
       {(lowStockItems.length > 0 || outOfStockItems.length > 0 || projectsDueSoonList.length > 0) && (
         <div className="grid gap-4 sm:grid-cols-2">
           {(lowStockItems.length > 0 || outOfStockItems.length > 0) && (
-            <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-amber-900 shadow-xs">
+            <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-amber-900 shadow-2xs">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -473,7 +413,7 @@ export default async function DashboardPage() {
               </div>
               <Link
                 href="/inventory"
-                className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-amber-700"
+                className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-amber-700 shadow-2xs"
               >
                 Kiểm tra kho →
               </Link>
@@ -481,7 +421,7 @@ export default async function DashboardPage() {
           )}
 
           {projectsDueSoonList.length > 0 && (
-            <div className="flex items-center justify-between rounded-2xl border border-blue-200 bg-blue-50/80 p-4 text-blue-900 shadow-xs">
+            <div className="flex items-center justify-between rounded-2xl border border-blue-200 bg-blue-50/80 p-4 text-blue-900 shadow-2xs">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -497,7 +437,7 @@ export default async function DashboardPage() {
               </div>
               <Link
                 href="/projects"
-                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-700"
+                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-blue-700 shadow-2xs"
               >
                 Xem tiến độ →
               </Link>
@@ -506,7 +446,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* 3. Modern KPI Cards */}
+      {/* 2. Modern KPI Cards */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           title="Khách hàng hoạt động"
@@ -565,12 +505,12 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* 4. Chart & Financial Breakdown */}
+      {/* 3. Chart & Financial Breakdown */}
       <div className="grid gap-6 lg:grid-cols-3">
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-bold text-slate-900">
+              <h3 className="text-base font-bold text-slate-900">
                 Biểu đồ Doanh thu & Chi phí
               </h3>
               <p className="mt-0.5 text-xs text-slate-500">
@@ -580,7 +520,7 @@ export default async function DashboardPage() {
 
             <Link
               href="/reports"
-              className="text-xs font-semibold text-blue-600 transition hover:text-blue-700"
+              className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1.5 rounded-xl transition hover:bg-blue-100 shadow-2xs"
             >
               Báo cáo chi tiết →
             </Link>
@@ -606,7 +546,7 @@ export default async function DashboardPage() {
                   <div className="flex h-48 w-full items-end justify-center gap-1.5 sm:gap-2">
                     <div
                       title={`Thu: ${formatCurrency(item.income)}`}
-                      className="w-4 sm:w-6 rounded-t-md bg-blue-600 transition hover:brightness-110"
+                      className="w-4 sm:w-6 rounded-t-md bg-blue-500 transition hover:brightness-110"
                       style={{
                         height: `${incomeHeight}px`,
                       }}
@@ -631,7 +571,7 @@ export default async function DashboardPage() {
 
           <div className="mt-5 flex items-center justify-between text-xs sm:text-sm">
             <div className="flex gap-6">
-              <Legend label="Doanh thu" className="bg-blue-600" />
+              <Legend label="Doanh thu" className="bg-blue-500" />
               <Legend label="Chi phí" className="bg-slate-300" />
             </div>
 
@@ -643,7 +583,7 @@ export default async function DashboardPage() {
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">
+            <h3 className="text-base font-bold text-slate-900">
               Sổ quỹ tháng này
             </h3>
             <p className="mt-0.5 text-xs text-slate-500">
@@ -683,18 +623,18 @@ export default async function DashboardPage() {
 
           <Link
             href="/finance"
-            className="mt-6 block w-full rounded-xl bg-slate-100 py-3 text-center text-xs font-bold text-slate-800 transition hover:bg-slate-200"
+            className="mt-6 block w-full rounded-xl bg-blue-50 border border-blue-200/80 py-2.5 text-center text-xs font-bold text-blue-700 transition hover:bg-blue-100 shadow-2xs"
           >
             Mở sổ quỹ tài chính →
           </Link>
         </section>
       </div>
 
-      {/* 5. Recent Projects Table */}
+      {/* 4. Recent Projects Table */}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">
+            <h3 className="text-base font-bold text-slate-900">
               Dự án gần đây
             </h3>
             <p className="mt-0.5 text-xs text-slate-500">
@@ -704,7 +644,7 @@ export default async function DashboardPage() {
 
           <Link
             href="/projects"
-            className="text-xs font-semibold text-blue-600 transition hover:text-blue-700"
+            className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1.5 rounded-xl transition hover:bg-blue-100 shadow-2xs"
           >
             Xem tất cả dự án →
           </Link>
@@ -712,7 +652,7 @@ export default async function DashboardPage() {
 
         {recentProjects.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="text-sm text-slate-500">Chưa có dự án nào.</p>
+            <p className="text-xs text-slate-500">Chưa có dự án nào.</p>
             <Link
               href="/projects/new"
               className="mt-3 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700"
@@ -722,7 +662,7 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-left">
+            <table className="w-full text-left">
               <thead className="bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                 <tr>
                   <th className="px-5 py-3.5">Mã & Tên dự án</th>
