@@ -42,15 +42,6 @@ const statusLabels: Record<CustomerStatus, string> = {
   cancelled: "Cancel",
 };
 
-const statusClasses: Record<CustomerStatus, string> = {
-  waiting_quote: "bg-amber-100 text-amber-800 border-amber-200",
-  waiting_topic: "bg-blue-100 text-blue-800 border-blue-200",
-  waiting_close: "bg-purple-100 text-purple-800 border-purple-200",
-  in_progress: "bg-cyan-100 text-cyan-800 border-cyan-200",
-  done: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  cancelled: "bg-red-100 text-red-700 border-red-200",
-};
-
 const customerTypeLabels: Record<string, string> = {
   individual: "Cá nhân",
   school: "Trường học",
@@ -252,19 +243,19 @@ export default async function CustomersPage({
         {/* Segment 1: Quá trình Tư vấn */}
         <Link
           href={`/customers?segment=consulting&view=${currentView}`}
-          className={`block rounded-2xl border-2 p-5 transition shadow-sm ${
+          className={`block rounded-2xl border p-5 transition shadow-2xs ${
             currentSegment === "consulting"
-              ? "border-amber-400 bg-amber-50/40 ring-2 ring-amber-200"
-              : "border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/10"
+              ? "border-amber-300 bg-amber-50/50 ring-2 ring-amber-100"
+              : "border-slate-200 bg-white hover:border-amber-200 hover:bg-amber-50/20"
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-800 text-sm font-black">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-800 text-base">
                 💬
               </span>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase">
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
                   1. Quá trình tư vấn & Chờ chốt
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -273,19 +264,19 @@ export default async function CustomersPage({
               </div>
             </div>
 
-            <span className="rounded-xl bg-amber-500 px-3.5 py-1 text-sm font-black text-white shadow-xs">
+            <span className="rounded-xl bg-amber-500 px-3 py-1 text-xs font-bold text-white shadow-2xs">
               {consultingCount} khách
             </span>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600 border-t border-amber-200/60 pt-3">
-            <span className="rounded-md bg-amber-100/80 px-2 py-0.5 text-amber-900">
+          <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600 border-t border-amber-200/50 pt-2.5">
+            <span className="rounded-md bg-amber-100/70 px-2 py-0.5 text-amber-900">
               Chờ báo giá: {allCustomersSummary.filter((c) => c.status === "waiting_quote").length}
             </span>
-            <span className="rounded-md bg-blue-100/80 px-2 py-0.5 text-blue-900">
+            <span className="rounded-md bg-blue-100/70 px-2 py-0.5 text-blue-900">
               Chờ đề tài: {allCustomersSummary.filter((c) => c.status === "waiting_topic").length}
             </span>
-            <span className="rounded-md bg-purple-100/80 px-2 py-0.5 text-purple-900">
+            <span className="rounded-md bg-purple-100/70 px-2 py-0.5 text-purple-900">
               Chờ chốt: {allCustomersSummary.filter((c) => c.status === "waiting_close").length}
             </span>
           </div>
@@ -294,19 +285,19 @@ export default async function CustomersPage({
         {/* Segment 2: Đã Chốt Cọc & Đang Thực Hiện */}
         <Link
           href={`/customers?segment=executing&view=${currentView}`}
-          className={`block rounded-2xl border-2 p-5 transition shadow-sm ${
+          className={`block rounded-2xl border p-5 transition shadow-2xs ${
             currentSegment === "executing"
-              ? "border-emerald-400 bg-emerald-50/40 ring-2 ring-emerald-200"
-              : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/10"
+              ? "border-emerald-300 bg-emerald-50/50 ring-2 ring-emerald-100"
+              : "border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/20"
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 text-sm font-black">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 text-base">
                 🚀
               </span>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase">
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
                   2. Đã chốt cọc & Đang thực hiện
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -315,19 +306,19 @@ export default async function CustomersPage({
               </div>
             </div>
 
-            <span className="rounded-xl bg-emerald-600 px-3.5 py-1 text-sm font-black text-white shadow-xs">
+            <span className="rounded-xl bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-2xs">
               {executingCount} khách
             </span>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600 border-t border-emerald-200/60 pt-3">
-            <span className="rounded-md bg-cyan-100/80 px-2 py-0.5 text-cyan-900">
+          <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600 border-t border-emerald-200/50 pt-2.5">
+            <span className="rounded-md bg-cyan-100/70 px-2 py-0.5 text-cyan-900">
               Đang thực hiện: {allCustomersSummary.filter((c) => c.status === "in_progress").length}
             </span>
-            <span className="rounded-md bg-emerald-100/80 px-2 py-0.5 text-emerald-900">
-              Hoàn thành (Done): {allCustomersSummary.filter((c) => c.status === "done").length}
+            <span className="rounded-md bg-emerald-100/70 px-2 py-0.5 text-emerald-900">
+              Hoàn thành: {allCustomersSummary.filter((c) => c.status === "done").length}
             </span>
-            <span className="rounded-md bg-red-100/80 px-2 py-0.5 text-red-900">
+            <span className="rounded-md bg-red-100/70 px-2 py-0.5 text-red-900">
               Hủy: {allCustomersSummary.filter((c) => c.status === "cancelled").length}
             </span>
           </div>
@@ -336,170 +327,92 @@ export default async function CustomersPage({
 
       {/* 2. Main Section */}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-6">
+        <div className="border-b border-slate-100 p-5 md:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                {currentSegment === "consulting" ? (
-                  <>
-                    <span className="h-3 w-3 rounded-full bg-amber-500" />
-                    Danh sách khách hàng đang tư vấn ({customers.length})
-                  </>
-                ) : currentSegment === "executing" ? (
-                  <>
-                    <span className="h-3 w-3 rounded-full bg-emerald-500" />
-                    Danh sách khách hàng đã chốt cọc & đang thực hiện ({customers.length})
-                  </>
-                ) : (
-                  <>Tất cả khách hàng ({customers.length})</>
-                )}
-              </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                {currentSegment === "consulting"
-                  ? "Khi khách hàng chốt cọc, bấm nút 'Chốt cọc' để chuyển ngay sang giai đoạn Đang thực hiện"
-                  : "Theo dõi tiến độ dự án và lịch sử bàn giao"}
-              </p>
-            </div>
-
-            {/* Actions: View Switcher, Export CSV, Add Customer */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/* View Switcher Toggle */}
-              <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200">
-                <Link
-                  href={`/customers?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&status=${encodeURIComponent(selectedStatus)}&segment=${currentSegment}&view=list`}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                    currentView === "list"
-                      ? "bg-white text-blue-600 shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  Danh sách
-                </Link>
-
-                <Link
-                  href={`/customers?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&status=${encodeURIComponent(selectedStatus)}&segment=${currentSegment}&view=pipeline`}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                    currentView === "pipeline"
-                      ? "bg-white text-blue-600 shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                  Phễu 2 giai đoạn
-                </Link>
-              </div>
-
-              <ExportCsvButton
-                filename={`danh-sach-khach-hang-${currentSegment}`}
-                headers={csvHeaders}
-                rows={csvRows}
-              />
-
+            {/* View Switcher Toggle */}
+            <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
               <Link
-                href="/customers/new"
-                className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
-              >
-                + Thêm khách hàng
-              </Link>
-            </div>
-          </div>
-
-          {/* Segment Filter Tabs */}
-          <div className="mt-5 flex flex-wrap items-center gap-2 border-b border-slate-100 pb-4">
-            <Link
-              href={`/customers?segment=consulting&view=${currentView}&type=${encodeURIComponent(selectedType)}`}
-              className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
-                currentSegment === "consulting"
-                  ? "bg-amber-500 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              💬 Phần 1: Đang tư vấn ({consultingCount})
-            </Link>
-
-            <Link
-              href={`/customers?segment=executing&view=${currentView}&type=${encodeURIComponent(selectedType)}`}
-              className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
-                currentSegment === "executing"
-                  ? "bg-emerald-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              🚀 Phần 2: Đã chốt cọc & Đang làm ({executingCount})
-            </Link>
-
-            <Link
-              href={`/customers?segment=all&view=${currentView}&type=${encodeURIComponent(selectedType)}`}
-              className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
-                currentSegment === "all"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              Toàn bộ khách ({totalCount})
-            </Link>
-          </div>
-
-          {/* Quick Sub-status Filter Pills */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Link
-              href={`/customers?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&segment=${currentSegment}&view=${currentView}&status=all`}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "all"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              Tất cả trạng thái
-            </Link>
-
-            {(currentSegment === "consulting"
-              ? CONSULTING_STATUSES
-              : currentSegment === "executing"
-              ? EXECUTING_STATUSES
-              : validStatuses
-            ).map((st) => (
-              <Link
-                key={st}
-                href={`/customers?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&segment=${currentSegment}&view=${currentView}&status=${st}`}
-                className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                  selectedStatus === st
-                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                    : `${statusClasses[st]} hover:opacity-80`
+                href={`/customers?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&status=${encodeURIComponent(selectedStatus)}&segment=${currentSegment}&view=list`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  currentView === "list"
+                    ? "bg-white text-blue-700 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                {statusLabels[st]}
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Danh sách khách hàng
               </Link>
-            ))}
+
+              <Link
+                href={`/customers?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(selectedType)}&status=${encodeURIComponent(selectedStatus)}&segment=${currentSegment}&view=pipeline`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  currentView === "pipeline"
+                    ? "bg-white text-blue-700 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Phễu 2 giai đoạn
+              </Link>
+            </div>
+
+            <ExportCsvButton
+              filename={`danh-sach-khach-hang-${currentSegment}`}
+              headers={csvHeaders}
+              rows={csvRows}
+            />
           </div>
 
-          {/* Search bar */}
+          {/* Unified Compact Filter Controls */}
           <form
             action="/customers"
             method="GET"
-            className="mt-4 grid gap-3 lg:grid-cols-[1fr_200px_auto_auto]"
+            className="mt-4 flex flex-wrap items-center gap-2.5 pt-4 border-t border-slate-100"
           >
-            <input type="hidden" name="status" value={selectedStatus} />
-            <input type="hidden" name="segment" value={currentSegment} />
             <input type="hidden" name="view" value={currentView} />
 
             <input
               type="search"
               name="q"
               defaultValue={keyword}
-              placeholder="Tìm theo tên, mã, số điện thoại, công ty..."
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Tìm theo tên, mã, SĐT, công ty..."
+              className="w-52 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
 
+            {/* Segment Selector */}
+            <select
+              name="segment"
+              defaultValue={currentSegment}
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+            >
+              <option value="all">Toàn bộ khách hàng ({totalCount})</option>
+              <option value="consulting">💬 Phần 1: Đang tư vấn ({consultingCount})</option>
+              <option value="executing">🚀 Phần 2: Đã chốt cọc & Đang làm ({executingCount})</option>
+            </select>
+
+            {/* Status Selector */}
+            <select
+              name="status"
+              defaultValue={selectedStatus}
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+            >
+              <option value="all">Tất cả trạng thái</option>
+              {validStatuses.map((st) => (
+                <option key={st} value={st}>
+                  {statusLabels[st]}
+                </option>
+              ))}
+            </select>
+
+            {/* Customer Type Selector */}
             <select
               name="type"
               defaultValue={selectedType}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
               <option value="all">Tất cả loại khách</option>
               <option value="individual">Cá nhân</option>
@@ -511,15 +424,15 @@ export default async function CustomersPage({
 
             <button
               type="submit"
-              className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-4 py-2 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
             >
-              Tìm
+              🔍 Lọc
             </button>
 
             {hasFilters && (
               <Link
                 href={`/customers?segment=${currentSegment}&view=${currentView}`}
-                className="rounded-xl border border-slate-300 bg-white px-5 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
               >
                 Xóa lọc
               </Link>
@@ -536,10 +449,10 @@ export default async function CustomersPage({
           <>
             {customers.length === 0 ? (
               <div className="p-12 text-center">
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-base font-bold text-slate-900">
                   Không tìm thấy khách hàng trong mục này
                 </h3>
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-1 text-xs text-slate-500">
                   Hãy thử từ khóa khác hoặc tạo khách hàng mới.
                 </p>
                 <Link
@@ -551,7 +464,7 @@ export default async function CustomersPage({
               </div>
             ) : (
               <div className="w-full overflow-x-auto">
-                <table className="w-full min-w-[1100px] text-left">
+                <table className="w-full text-left">
                   <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                     <tr>
                       <th className="px-5 py-4">Mã KH</th>
