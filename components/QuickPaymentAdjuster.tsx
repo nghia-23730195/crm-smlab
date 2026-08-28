@@ -337,11 +337,11 @@ export default function QuickPaymentAdjuster({
                 type="button"
                 onClick={handleSave}
                 disabled={isPending}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100 hover:border-blue-400 px-4.5 py-2 text-xs font-bold transition active:scale-95 shadow-2xs disabled:opacity-50"
               >
                 {isPending ? (
                   <>
-                    <svg className="h-3.5 w-3.5 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                    <svg className="h-3.5 w-3.5 animate-spin text-blue-600" viewBox="0 0 24 24" fill="none">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
