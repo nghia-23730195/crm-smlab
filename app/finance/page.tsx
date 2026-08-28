@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import DeleteTransactionButton from "@/components/DeleteTransactionButton";
 import ExportCsvButton from "@/components/ExportCsvButton";
+import FinanceCharts from "@/components/FinanceCharts";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { deleteTransaction } from "./actions";
@@ -457,7 +458,18 @@ export default async function FinancePage({
         />
       </div>
 
-      {/* 2. Main Section */}
+      {/* 2. Visual Interactive Charts */}
+      <FinanceCharts
+        monthlyData={monthlyData}
+        incomeCategories={incomeCategories}
+        expenseCategories={expenseCategories}
+        totalIncome={totalIncome}
+        totalExpense={totalExpense}
+        profit={profit}
+        targetYear={targetYear}
+      />
+
+      {/* 3. Main Section: Ledger, Monthly Matrix & Categories */}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 p-5 md:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
