@@ -38,8 +38,8 @@ const statusLabels: Record<CustomerStatus, string> = {
   waiting_topic: "Đang chờ đề tài",
   waiting_close: "Đang chờ chốt",
   in_progress: "Đang thực hiện",
-  done: "Done",
-  cancelled: "Cancel",
+  done: "Hoàn thành",
+  cancelled: "Đã hủy",
 };
 
 const customerTypeLabels: Record<string, string> = {
@@ -371,7 +371,7 @@ export default async function CustomersPage({
           <form
             action="/customers"
             method="GET"
-            className="mt-4 flex flex-wrap items-center gap-2.5 pt-4 border-t border-slate-100"
+            className="mt-4 flex flex-wrap items-center gap-2 pt-4 border-t border-slate-100"
           >
             <input type="hidden" name="view" value={currentView} />
 
@@ -379,26 +379,26 @@ export default async function CustomersPage({
               type="search"
               name="q"
               defaultValue={keyword}
-              placeholder="Tìm theo tên, mã, SĐT, công ty..."
-              className="w-52 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="Tìm theo tên, mã, SĐT..."
+              className="w-40 lg:w-48 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
 
             {/* Segment Selector */}
             <select
               name="segment"
               defaultValue={currentSegment}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+              className="max-w-[210px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
-              <option value="all">Toàn bộ khách hàng ({totalCount})</option>
-              <option value="consulting">💬 Phần 1: Đang tư vấn ({consultingCount})</option>
-              <option value="executing">🚀 Phần 2: Đã chốt cọc & Đang làm ({executingCount})</option>
+              <option value="all">Toàn bộ khách ({totalCount})</option>
+              <option value="consulting">💬 Đang tư vấn ({consultingCount})</option>
+              <option value="executing">🚀 Đã chốt cọc ({executingCount})</option>
             </select>
 
             {/* Status Selector */}
             <select
               name="status"
               defaultValue={selectedStatus}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+              className="max-w-[150px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
               <option value="all">Tất cả trạng thái</option>
               {validStatuses.map((st) => (
@@ -412,7 +412,7 @@ export default async function CustomersPage({
             <select
               name="type"
               defaultValue={selectedType}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+              className="max-w-[140px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
               <option value="all">Tất cả loại khách</option>
               <option value="individual">Cá nhân</option>
@@ -424,7 +424,7 @@ export default async function CustomersPage({
 
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-4 py-2 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-3.5 py-2 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
             >
               🔍 Lọc
             </button>
@@ -432,7 +432,7 @@ export default async function CustomersPage({
             {hasFilters && (
               <Link
                 href={`/customers?segment=${currentSegment}&view=${currentView}`}
-                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
+                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
               >
                 Xóa lọc
               </Link>
@@ -465,19 +465,19 @@ export default async function CustomersPage({
             ) : (
               <div className="w-full overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                  <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-100">
                     <tr>
-                      <th className="px-5 py-4">Mã KH</th>
-                      <th className="px-5 py-4">Khách hàng / Đơn vị</th>
-                      <th className="px-5 py-4">Liên hệ</th>
-                      <th className="px-5 py-4">Phân loại</th>
-                      <th className="px-5 py-4">Dự án</th>
-                      <th className="px-5 py-4">Trạng thái</th>
-                      <th className="px-5 py-4 text-right">Thao tác</th>
+                      <th className="px-3.5 py-3 whitespace-nowrap">Mã KH</th>
+                      <th className="px-3.5 py-3">Khách hàng / Đơn vị</th>
+                      <th className="px-3.5 py-3 whitespace-nowrap">Liên hệ</th>
+                      <th className="px-3.5 py-3 whitespace-nowrap">Phân loại</th>
+                      <th className="px-3.5 py-3 whitespace-nowrap">Dự án</th>
+                      <th className="px-3.5 py-3 whitespace-nowrap">Trạng thái</th>
+                      <th className="px-3.5 py-3 text-right whitespace-nowrap">Thao tác</th>
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-slate-100">
                     {customers.map((customer) => {
                       const status = customer.status as CustomerStatus;
                       const isConsulting = CONSULTING_STATUSES.includes(status);
@@ -485,9 +485,9 @@ export default async function CustomersPage({
                       return (
                         <tr
                           key={customer.id}
-                          className="bg-white transition hover:bg-slate-50"
+                          className="bg-white transition hover:bg-slate-50/80"
                         >
-                          <td className="whitespace-nowrap px-5 py-4 text-sm font-bold text-blue-600">
+                          <td className="whitespace-nowrap px-3.5 py-3 text-xs font-bold text-blue-600">
                             <Link
                               href={`/customers/${customer.id}`}
                               className="hover:underline"
@@ -496,59 +496,59 @@ export default async function CustomersPage({
                             </Link>
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-3.5 py-3">
                             <Link
                               href={`/customers/${customer.id}`}
-                              className="font-bold text-slate-900 hover:text-blue-600 transition"
+                              className="font-bold text-slate-900 hover:text-blue-600 transition text-xs block"
                             >
                               {customer.full_name}
                             </Link>
 
                             {customer.company_name && (
-                              <p className="mt-0.5 text-xs text-slate-500 font-medium">
+                              <p className="mt-0.5 text-[11px] text-slate-500 font-medium truncate max-w-[200px]">
                                 🏢 {customer.company_name}
                               </p>
                             )}
                           </td>
 
-                          <td className="px-5 py-4 text-sm text-slate-600">
+                          <td className="px-3.5 py-3 text-xs text-slate-600 whitespace-nowrap">
                             {customer.phone && (
                               <p className="font-medium text-slate-800">
                                 📞 {customer.phone}
                               </p>
                             )}
                             {customer.email && (
-                              <p className="mt-0.5 text-xs text-slate-500">
+                              <p className="mt-0.5 text-[11px] text-slate-500">
                                 ✉️ {customer.email}
                               </p>
                             )}
                             {!customer.phone && !customer.email && (
-                              <span className="text-xs text-slate-400">
+                              <span className="text-[11px] text-slate-400">
                                 Chưa có liên hệ
                               </span>
                             )}
                           </td>
 
-                          <td className="px-5 py-4 text-sm text-slate-700">
+                          <td className="px-3.5 py-3 text-xs text-slate-700 whitespace-nowrap">
                             {customerTypeLabels[customer.customer_type] ??
                               customer.customer_type}
                           </td>
 
-                          <td className="px-5 py-4">
-                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-800">
+                          <td className="px-3.5 py-3 whitespace-nowrap">
+                            <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
                               {customer._count.projects} dự án
                             </span>
                           </td>
 
-                          <td className="px-5 py-4">
+                          <td className="px-3.5 py-3 whitespace-nowrap">
                             <CustomerStatusSelect
                               customerId={customer.id}
                               currentStatus={customer.status}
                             />
                           </td>
 
-                          <td className="px-5 py-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
+                          <td className="px-3.5 py-3 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center justify-end gap-1.5">
                               {/* Quick Convert Button for Consulting Phase */}
                               {isConsulting && (
                                 <ConvertCustomerButton
@@ -559,14 +559,14 @@ export default async function CustomersPage({
 
                               <Link
                                 href={`/customers/${customer.id}`}
-                                className="inline-flex rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                                className="whitespace-nowrap inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs"
                               >
                                 Hồ sơ
                               </Link>
 
                               <Link
                                 href={`/customers/${customer.id}/edit`}
-                                className="inline-flex rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                                className="whitespace-nowrap inline-flex items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 shadow-2xs"
                               >
                                 Sửa
                               </Link>

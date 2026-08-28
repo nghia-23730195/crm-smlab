@@ -16,8 +16,8 @@ const statusLabels: Record<CustomerStatus, string> = {
   waiting_topic: "Đang chờ đề tài",
   waiting_close: "Đang chờ chốt",
   in_progress: "Đang thực hiện",
-  done: "Done",
-  cancelled: "Cancel",
+  done: "Hoàn thành",
+  cancelled: "Đã hủy",
 };
 
 const statusClasses: Record<CustomerStatus, string> = {
