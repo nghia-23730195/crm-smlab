@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import ComponentThumbnail from "@/components/ComponentThumbnail";
 import DeleteProductButton from "@/components/DeleteProductButton";
+import ExportCsvButton from "@/components/ExportCsvButton";
 import ProductStatusToggle from "@/components/ProductStatusToggle";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
@@ -130,6 +131,43 @@ export default async function ProductsPage({
     keyword.length > 0 ||
     selectedStatus !== "all";
 
+  // Prepare CSV Export rows
+  const csvHeaders = [
+    "Mã sản phẩm",
+    "Tên sản phẩm",
+    "Danh mục",
+    "Đơn vị tính",
+    "Giá nhập",
+    "Giá bán",
+    "Tồn kho",
+    "Tồn tối thiểu",
+    "Trạng thái",
+  ];
+
+  const csvRows = products.map((p) => {
+    const stock = Number(p.stock_quantity);
+    const minStock = Number(p.minimum_stock);
+    const statusText = !p.is_active
+      ? "Ngừng bán"
+      : stock === 0
+        ? "Hết hàng"
+        : stock <= minStock
+          ? "Sắp hết"
+          : "Còn hàng";
+
+    return [
+      p.product_code,
+      p.name,
+      p.category || "",
+      p.unit,
+      Number(p.cost_price),
+      Number(p.sale_price),
+      stock,
+      minStock,
+      statusText,
+    ];
+  });
+
   return (
     <div className="p-5 md:p-8 space-y-6">
       {params.success === "created" && (
@@ -156,121 +194,62 @@ export default async function ProductsPage({
         </div>
       )}
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 p-5 md:p-6">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-bold text-slate-900">
-              Danh sách sản phẩm & Linh kiện
-            </h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Danh mục linh kiện & Sản phẩm ({products.length})
+              </p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Theo dõi bảng giá, định mức và phân loại hàng hóa
+              </p>
+            </div>
 
-            <p className="text-xs text-slate-500">
-              Hiển thị {products.length} sản phẩm
-              {hasFilters
-                ? ` trên ${allProducts.length} kết quả lọc`
-                : " trong hệ thống SM-LAB"}
-            </p>
+            <ExportCsvButton
+              filename="danh-sach-san-pham-smlab"
+              headers={csvHeaders}
+              rows={csvRows}
+            />
           </div>
 
-          {/* Quick Filter Pills */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              href={`/products?q=${encodeURIComponent(keyword)}&status=all`}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "all"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              Tất cả ({allProducts.length})
-            </Link>
-
-            <Link
-              href={`/products?q=${encodeURIComponent(keyword)}&status=in-stock`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "in-stock"
-                  ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                  : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-              }`}
-            >
-              ✅ Còn hàng
-            </Link>
-
-            <Link
-              href={`/products?q=${encodeURIComponent(keyword)}&status=low-stock`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "low-stock"
-                  ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                  : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
-              }`}
-            >
-              ⚠️ Sắp hết
-            </Link>
-
-            <Link
-              href={`/products?q=${encodeURIComponent(keyword)}&status=out-of-stock`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "out-of-stock"
-                  ? "bg-red-600 text-white border-red-600 shadow-xs"
-                  : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-              }`}
-            >
-              ⛔ Hết hàng
-            </Link>
-
-            <Link
-              href={`/products?q=${encodeURIComponent(keyword)}&status=inactive`}
-              className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "inactive"
-                  ? "bg-slate-700 text-white border-slate-700 shadow-xs"
-                  : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
-              }`}
-            >
-              Ngừng bán
-            </Link>
-          </div>
-
-          {/* Search Form */}
+          {/* Unified Compact Filter Controls */}
           <form
             action="/products"
             method="GET"
-            className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center"
+            className="mt-4 flex flex-wrap items-center gap-2.5 pt-4 border-t border-slate-100"
           >
-            <input
-              type="hidden"
-              name="status"
-              value={selectedStatus}
-            />
             <input
               type="search"
               name="q"
               defaultValue={keyword}
               placeholder="Tìm theo tên, mã hoặc danh mục..."
-              className="w-full sm:w-80 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-64 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
 
             <select
               name="status"
               defaultValue={selectedStatus}
-              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="in-stock">Còn hàng</option>
-              <option value="low-stock">Sắp hết</option>
-              <option value="out-of-stock">Hết hàng</option>
+              <option value="all">Tất cả trạng thái ({allProducts.length})</option>
+              <option value="in-stock">✅ Còn hàng</option>
+              <option value="low-stock">⚠️ Sắp hết</option>
+              <option value="out-of-stock">⛔ Hết hàng</option>
               <option value="inactive">Ngừng bán</option>
             </select>
 
             <button
               type="submit"
-              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 shadow-2xs"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-4 py-2 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
             >
-              Tìm kiếm
+              🔍 Lọc
             </button>
 
             {hasFilters && (
               <Link
                 href="/products"
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
               >
                 Xóa lọc
               </Link>
@@ -284,21 +263,21 @@ export default async function ProductsPage({
               Không tìm thấy sản phẩm
             </h3>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-xs text-slate-500">
               Hãy thử từ khóa khác hoặc xóa bộ lọc hiện tại.
             </p>
 
             {hasFilters ? (
               <Link
                 href="/products"
-                className="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700"
               >
                 Xem tất cả sản phẩm
               </Link>
             ) : (
               <Link
                 href="/products/new"
-                className="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="mt-4 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700"
               >
                 + Thêm sản phẩm đầu tiên
               </Link>
@@ -307,20 +286,20 @@ export default async function ProductsPage({
         ) : (
           <div className="w-full overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
+              <thead className="bg-slate-50 text-[11px] uppercase text-slate-500 border-b border-slate-100">
                 <tr>
-                  <th className="px-4 py-3.5">Sản phẩm / Linh kiện</th>
-                  <th className="px-4 py-3.5">Danh mục</th>
-                  <th className="px-4 py-3.5">ĐVT</th>
-                  <th className="px-4 py-3.5 text-right">Giá nhập</th>
-                  <th className="px-4 py-3.5 text-right">Giá bán</th>
-                  <th className="px-4 py-3.5 text-right">Tồn kho</th>
-                  <th className="px-4 py-3.5">Trạng thái</th>
-                  <th className="px-4 py-3.5 text-right">Thao tác</th>
+                  <th className="px-4 py-3 font-bold">Sản phẩm / Linh kiện</th>
+                  <th className="px-3.5 py-3 font-bold">Danh mục</th>
+                  <th className="px-3 py-3 font-bold">ĐVT</th>
+                  <th className="px-3.5 py-3 text-right font-bold whitespace-nowrap">Giá nhập</th>
+                  <th className="px-3.5 py-3 text-right font-bold whitespace-nowrap">Giá bán</th>
+                  <th className="px-3 py-3 text-right font-bold whitespace-nowrap">Tồn kho</th>
+                  <th className="px-3.5 py-3 font-bold whitespace-nowrap">Trạng thái</th>
+                  <th className="px-4 py-3 text-right font-bold whitespace-nowrap">Thao tác</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-slate-100">
                 {products.map((product: Product) => {
                   const stock = Number(
                     product.stock_quantity,
@@ -339,17 +318,17 @@ export default async function ProductsPage({
 
                   const statusClass =
                     stockStatus === "Hết hàng"
-                      ? "bg-red-100 text-red-700"
+                      ? "bg-red-50 text-red-700 border-red-200"
                       : stockStatus === "Sắp hết"
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-emerald-100 text-emerald-700";
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-emerald-50 text-emerald-700 border-emerald-200";
 
                   return (
                     <tr
                       key={product.id}
                       className="bg-white text-slate-900 transition hover:bg-slate-50/80 group"
                     >
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <ComponentThumbnail
                             imageUrl={product.image_url}
@@ -359,15 +338,15 @@ export default async function ProductsPage({
                           />
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200">
+                              <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200">
                                 {product.product_code}
                               </span>
-                              <p className="font-semibold text-slate-900 text-sm">
+                              <p className="font-bold text-slate-900 text-xs">
                                 {product.name}
                               </p>
                             </div>
                             {product.description && (
-                              <p className="mt-0.5 max-w-sm truncate text-xs text-slate-500">
+                              <p className="mt-0.5 max-w-xs truncate text-[11px] text-slate-500">
                                 {product.description}
                               </p>
                             )}
@@ -375,32 +354,32 @@ export default async function ProductsPage({
                         </div>
                       </td>
 
-                      <td className="px-4 py-3.5 text-xs text-slate-600">
+                      <td className="px-3.5 py-3 text-xs text-slate-600">
                         {product.category ?? "Chưa phân loại"}
                       </td>
 
-                      <td className="px-4 py-3.5 text-xs text-slate-600">
+                      <td className="px-3 py-3 text-xs text-slate-600">
                         {product.unit}
                       </td>
 
-                      <td className="px-4 py-3.5 text-right text-xs font-medium text-slate-700 tabular-nums">
+                      <td className="px-3.5 py-3 text-right text-xs font-medium text-slate-700 tabular-nums whitespace-nowrap">
                         {formatCurrency(product.cost_price)}
                       </td>
 
-                      <td className="px-4 py-3.5 text-right text-xs font-bold text-slate-900 tabular-nums">
+                      <td className="px-3.5 py-3 text-right text-xs font-bold text-slate-900 tabular-nums whitespace-nowrap">
                         {formatCurrency(product.sale_price)}
                       </td>
 
-                      <td className="px-4 py-3.5 text-right text-sm font-bold text-slate-900 tabular-nums">
+                      <td className="px-3 py-3 text-right text-xs font-bold text-slate-900 tabular-nums whitespace-nowrap">
                         {product.stock_quantity.toString()}
                       </td>
 
-                      <td className="px-4 py-3.5">
+                      <td className="px-3.5 py-3 whitespace-nowrap">
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
                             product.is_active
                               ? statusClass
-                              : "bg-slate-200 text-slate-700"
+                              : "bg-slate-100 text-slate-700 border-slate-200"
                           }`}
                         >
                           {product.is_active
@@ -409,11 +388,11 @@ export default async function ProductsPage({
                         </span>
                       </td>
 
-                      <td className="px-4 py-3.5 text-right">
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
                         <div className="inline-flex items-center justify-end gap-1.5">
                           <Link
                             href={`/products/${product.id}/edit`}
-                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 shadow-2xs"
                           >
                             Sửa
                           </Link>
