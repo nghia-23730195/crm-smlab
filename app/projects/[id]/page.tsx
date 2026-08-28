@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import DeadlineBadge from "@/components/DeadlineBadge";
 import DeleteProjectButton from "@/components/DeleteProjectButton";
 import ProjectStatusSelect from "@/components/ProjectStatusSelect";
+import QuickPaymentAdjuster from "@/components/QuickPaymentAdjuster";
 import { getDeadlineInfo } from "@/lib/deadline";
 import { formatProjectTitle } from "@/lib/formatters";
 import { requireCurrentUser } from "@/lib/auth/current-user";
@@ -94,7 +95,6 @@ export default async function ProjectDetailPage({
   const paidAmount = Number(project.paid_amount ?? 0);
   const remainingDebt = Math.max(0, actualValue - paidAmount);
   const expectedProfit = actualValue - totalBOMCost;
-  const percentPaid = actualValue > 0 ? Math.min(100, Math.round((paidAmount / actualValue) * 100)) : 0;
 
   const customerName =
     project.customers?.company_name ||
@@ -178,17 +178,23 @@ export default async function ProjectDetailPage({
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-slate-500">Đã thanh toán</p>
-          <p className="mt-2 text-2xl font-bold text-emerald-600">{formatCurrency(paidAmount)}</p>
-          <div className="mt-2 w-full">
-            <div className="flex justify-between text-[11px] font-semibold text-slate-500 mb-1">
-              <span>Tiến độ: {percentPaid}%</span>
-              <span>Còn lại: {formatCurrency(remainingDebt)}</span>
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
-              <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${percentPaid}%` }} />
-            </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase text-slate-500">Đã thanh toán</p>
+            <span className="text-[11px] font-bold text-blue-600">Thu tiền / Sửa ✏️</span>
           </div>
+          <div className="mt-2">
+            <QuickPaymentAdjuster
+              projectId={project.id}
+              projectCode={project.project_code}
+              projectName={project.project_name}
+              actualValue={actualValue}
+              currentPaid={paidAmount}
+              customerName={customerName}
+            />
+          </div>
+          <p className="mt-1 text-xs text-slate-500 tabular-nums">
+            {remainingDebt > 0 ? `Còn nợ: ${formatCurrency(remainingDebt)}` : "Đã thanh toán đủ 100%"}
+          </p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

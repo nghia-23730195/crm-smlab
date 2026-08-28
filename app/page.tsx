@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import DeadlineBadge from "@/components/DeadlineBadge";
 import ProjectStatusSelect from "@/components/ProjectStatusSelect";
+import QuickPaymentAdjuster from "@/components/QuickPaymentAdjuster";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { formatProjectTitle } from "@/lib/formatters";
 import { prisma } from "@/lib/prisma";
@@ -742,7 +743,6 @@ export default async function DashboardPage() {
 
                   const actualVal = Number(project.actual_value ?? 0);
                   const paidVal = Number(project.paid_amount ?? 0);
-                  const percentPaid = actualVal > 0 ? Math.min(100, Math.round((paidVal / actualVal) * 100)) : 0;
 
                   return (
                     <tr
@@ -792,18 +792,14 @@ export default async function DashboardPage() {
                       </td>
 
                       <td className="px-5 py-4">
-                        <div className="w-36">
-                          <div className="flex justify-between text-xs font-semibold mb-1 tabular-nums">
-                            <span className="text-emerald-700 font-bold">{formatCurrency(paidVal)}</span>
-                            <span className="text-slate-500 font-medium">{percentPaid}%</span>
-                          </div>
-                          <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
-                            <div
-                              className="h-full bg-emerald-500 rounded-full transition-all"
-                              style={{ width: `${percentPaid}%` }}
-                            />
-                          </div>
-                        </div>
+                        <QuickPaymentAdjuster
+                          projectId={project.id}
+                          projectCode={project.project_code}
+                          projectName={project.project_name}
+                          actualValue={actualVal}
+                          currentPaid={paidVal}
+                          customerName={customerName}
+                        />
                       </td>
 
                       <td className="px-5 py-4">

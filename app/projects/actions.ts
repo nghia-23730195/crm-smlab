@@ -463,3 +463,86 @@ export async function deleteProject(projectId: string) {
 
   redirect("/projects?success=deleted");
 }
+
+export async function updateProjectPayment(
+  projectId: string,
+  newPaidAmountNumber: number,
+  syncToFinance: boolean = true,
+) {
+  const { organizationId, userId } = await requireCurrentUser();
+
+  const project = await prisma.projects.findFirst({
+    where: {
+      id: projectId,
+      organization_id: organizationId,
+    },
+    select: {
+      id: true,
+      project_code: true,
+      project_name: true,
+      actual_value: true,
+      paid_amount: true,
+      customer_id: true,
+    },
+  });
+
+  if (!project) {
+    throw new Error("Không tìm thấy dự án.");
+  }
+
+  const oldPaid = Number(project.paid_amount ?? 0);
+  const newPaid = Math.max(0, newPaidAmountNumber);
+  const diff = newPaid - oldPaid;
+
+  await prisma.projects.update({
+    where: {
+      id: projectId,
+    },
+    data: {
+      paid_amount: newPaid,
+      updated_at: new Date(),
+    },
+  });
+
+  // Tự động tạo phiếu thu vào sổ quỹ tài chính nếu số tiền thanh toán tăng lên
+  if (syncToFinance && diff > 0) {
+    const transactionCode = `THU-${project.project_code}-${Date.now().toString().slice(-4)}`;
+    await prisma.transactions.create({
+      data: {
+        organization_id: organizationId,
+        transaction_code: transactionCode,
+        transaction_type: "income",
+        category: "Doanh thu dự án",
+        amount: diff,
+        payment_method: "transfer",
+        customer_id: project.customer_id,
+        project_id: projectId,
+        description: `Thu tiền dự án ${project.project_code} - ${project.project_name}`,
+        created_by: userId,
+      },
+    });
+  }
+
+  await recordActivity({
+    organizationId,
+    userId,
+    action: "update",
+    entityType: "project",
+    entityId: projectId,
+    newData: {
+      project_name: project.project_name,
+      project_code: project.project_code,
+      paid_amount: newPaid,
+      diff,
+    },
+    oldData: {
+      paid_amount: oldPaid,
+    },
+  });
+
+  revalidatePath("/projects");
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/finance");
+  revalidatePath("/reports");
+  revalidatePath("/");
+}
