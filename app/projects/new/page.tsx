@@ -160,12 +160,23 @@ export default async function NewProjectPage() {
             />
 
             <FormField
-              label="Đã thanh toán"
+              label="Tổng giá trị hợp đồng (VNĐ)"
+              name="actual_value"
+              type="number"
+              min="0"
+              step="1000"
+              defaultValue="0"
+              placeholder="Nhập giá trị hợp đồng (ví dụ: 10000000)"
+            />
+
+            <FormField
+              label="Số tiền đã thanh toán (VNĐ)"
               name="paid_amount"
               type="number"
               min="0"
               step="1000"
               defaultValue="0"
+              placeholder="0"
             />
           </div>
 
