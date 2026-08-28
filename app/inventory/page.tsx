@@ -305,47 +305,8 @@ export default async function InventoryPage({
   });
 
   return (
-    <div className="space-y-8 p-5 md:p-8">
-      {/* 1. Header with Quick Actions */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-slate-900">
-              Kho linh kiện & Vật tư
-            </h1>
-            <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200">
-              {totalProductTypes} mã linh kiện
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-slate-500">
-            Theo dõi định mức tồn kho, hình ảnh minh họa và cảnh báo nhập xuất SM-LAB.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <ExportCsvButton
-            filename="kho-linh-kien-smlab.csv"
-            headers={exportHeaders}
-            rows={exportRows}
-          />
-
-          <Link
-            href="/inventory/movements/new"
-            className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs font-bold text-blue-700 transition hover:bg-blue-100 shadow-2xs"
-          >
-            📦 Lập phiếu kho
-          </Link>
-
-          <Link
-            href="/products/new"
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-blue-700 shadow-2xs"
-          >
-            + Thêm linh kiện mới
-          </Link>
-        </div>
-      </div>
-
-      {/* 2. KPI Summary Cards */}
+    <div className="space-y-6 p-5 md:p-8">
+      {/* 1. KPI Summary Cards */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           label="Tổng loại linh kiện"
@@ -378,145 +339,105 @@ export default async function InventoryPage({
           description="Cần nhập hàng ngay để kịp dự án"
           valueClassName={
             outOfStockCount > 0
-              ? "text-red-600"
+              ? "text-rose-600"
               : "text-slate-900"
           }
         />
       </section>
 
-      {/* 3. Filter & View Switcher Box */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-slate-100 pb-5">
-          {/* Quick Filter Pills */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=all&view=${viewMode}`}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "all"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              Tất cả ({totalProductTypes})
-            </Link>
+      {/* 2. Main Section */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-100 p-5 md:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            {/* View Mode Toggle: Table View vs Gallery Grid */}
+            <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
+              <Link
+                href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=${selectedStatus}&view=table`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  viewMode === "table"
+                    ? "bg-white text-blue-700 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                📋 Danh sách
+              </Link>
 
-            <Link
-              href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=low_stock&view=${viewMode}`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "low_stock"
-                  ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                  : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
-              }`}
-            >
-              ⚠️ Sắp hết ({lowStockCount})
-            </Link>
+              <Link
+                href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=${selectedStatus}&view=grid`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  viewMode === "grid"
+                    ? "bg-white text-blue-700 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                🖼️ Thư viện hình ảnh
+              </Link>
+            </div>
 
-            <Link
-              href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=out_of_stock&view=${viewMode}`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "out_of_stock"
-                  ? "bg-red-600 text-white border-red-600 shadow-xs"
-                  : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-              }`}
-            >
-              ⛔ Hết hàng ({outOfStockCount})
-            </Link>
-
-            <Link
-              href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=available&view=${viewMode}`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "available"
-                  ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                  : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-              }`}
-            >
-              ✅ Còn hàng ({totalProductTypes - lowStockCount - outOfStockCount})
-            </Link>
+            <ExportCsvButton
+              filename="kho-linh-kien-smlab.csv"
+              headers={exportHeaders}
+              rows={exportRows}
+            />
           </div>
 
-          {/* View Mode Toggle: Table View vs Gallery Grid */}
-          <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
-            <Link
-              href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=${selectedStatus}&view=table`}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                viewMode === "table"
-                  ? "bg-white text-blue-700 shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              📋 Danh sách
-            </Link>
+          {/* Unified Compact Filter Controls */}
+          <form
+            action="/inventory"
+            method="GET"
+            className="mt-4 flex flex-wrap items-center gap-2.5 pt-4 border-t border-slate-100"
+          >
+            <input type="hidden" name="view" value={viewMode} />
 
-            <Link
-              href={`/inventory?q=${encodeURIComponent(keyword)}&category=${encodeURIComponent(selectedCategory)}&status=${selectedStatus}&view=grid`}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                viewMode === "grid"
-                  ? "bg-white text-blue-700 shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+            <input
+              type="search"
+              name="q"
+              defaultValue={keyword}
+              placeholder="Tìm mã, tên, danh mục linh kiện..."
+              className="w-56 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+
+            <select
+              name="status"
+              defaultValue={selectedStatus}
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
-              🖼️ Thư viện hình ảnh
-            </Link>
-          </div>
+              <option value="all">Tất cả trạng thái tồn ({totalProductTypes})</option>
+              <option value="available">✅ Còn hàng ({totalProductTypes - lowStockCount - outOfStockCount})</option>
+              <option value="low_stock">⚠️ Sắp hết ({lowStockCount})</option>
+              <option value="out_of_stock">⛔ Hết hàng ({outOfStockCount})</option>
+            </select>
+
+            <select
+              name="category"
+              defaultValue={selectedCategory}
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500 max-w-[200px]"
+            >
+              <option value="all">Tất cả nhóm linh kiện</option>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-4 py-2 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
+            >
+              🔍 Lọc
+            </button>
+
+            {hasFilters && (
+              <Link
+                href={`/inventory?view=${viewMode}`}
+                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
+              >
+                Xóa lọc
+              </Link>
+            )}
+          </form>
         </div>
-
-        {/* Search & Filter Bar */}
-        <form
-          action="/inventory"
-          method="GET"
-          className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_200px_180px_auto_auto]"
-        >
-          <input type="hidden" name="status" value={selectedStatus} />
-          <input type="hidden" name="view" value={viewMode} />
-
-          <input
-            type="search"
-            name="q"
-            defaultValue={keyword}
-            placeholder="Tìm mã, tên hoặc nhóm linh kiện..."
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          />
-
-          <select
-            name="category"
-            defaultValue={selectedCategory}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          >
-            <option value="all">Tất cả nhóm linh kiện</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="status"
-            defaultValue={selectedStatus}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="available">Còn hàng</option>
-            <option value="low_stock">Sắp hết</option>
-            <option value="out_of_stock">Hết hàng</option>
-          </select>
-
-          <button
-            type="submit"
-            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            Tìm kiếm
-          </button>
-
-          {hasFilters && (
-            <Link
-              href={`/inventory?view=${viewMode}`}
-              className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              Xóa lọc
-            </Link>
-          )}
-        </form>
 
         {/* 4. Display Products (Empty / Table / Grid) */}
         {products.length === 0 ? (
