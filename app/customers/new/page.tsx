@@ -1,8 +1,11 @@
 import Link from "next/link";
 
-import SubmitButton from "@/components/SubmitButton";
-
+import { requireCurrentUser } from "@/lib/auth/current-user";
+import { prisma } from "@/lib/prisma";
 import { createCustomer } from "../actions";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const customerTypeOptions = [
   {
@@ -89,28 +92,52 @@ const customerStatusOptions = [
   },
 ];
 
-export default function NewCustomerPage() {
+export default async function NewCustomerPage() {
+  const { organizationId } = await requireCurrentUser();
+
+  const allCustomers = await prisma.customers.findMany({
+    where: {
+      organization_id: organizationId,
+    },
+    select: {
+      customer_code: true,
+    },
+  });
+
+  let maxNum = 0;
+  for (const c of allCustomers) {
+    const match = c.customer_code.match(/(\d+)/);
+    if (match && match[1]) {
+      const num = parseInt(match[1], 10);
+      if (num > maxNum) {
+        maxNum = num;
+      }
+    }
+  }
+  const nextCustomerCode = `KH-${String(Math.max(maxNum + 1, allCustomers.length + 1)).padStart(3, "0")}`;
+
   return (
     <div className="p-5 md:p-8">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-4xl">
         <form
           action={createCustomer}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-xs"
         >
-          <div className="border-b border-slate-200 pb-5">
+          <div className="border-b border-slate-100 pb-5 mb-6">
             <h2 className="text-lg font-bold text-slate-900">
               Thông tin khách hàng
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-xs text-slate-500">
               Nhập thông tin để thêm khách hàng mới vào hệ thống.
             </p>
           </div>
 
-          <div className="mt-6 grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2">
             <FormField
-              label="Mã khách hàng"
+              label="Mã khách hàng (Tự động đánh mã)"
               name="customer_code"
+              defaultValue={nextCustomerCode}
               placeholder="Ví dụ: KH-001"
               required
             />
@@ -169,7 +196,7 @@ export default function NewCustomerPage() {
           <div className="mt-5">
             <label
               htmlFor="address"
-              className="mb-2 block text-sm font-semibold text-slate-700"
+              className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
             >
               Địa chỉ
             </label>
@@ -179,14 +206,14 @@ export default function NewCustomerPage() {
               name="address"
               rows={2}
               placeholder="Nhập địa chỉ khách hàng"
-              className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
             />
           </div>
 
           <div className="mt-5">
             <label
               htmlFor="notes"
-              className="mb-2 block text-sm font-semibold text-slate-700"
+              className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
             >
               Ghi chú
             </label>
@@ -196,22 +223,24 @@ export default function NewCustomerPage() {
               name="notes"
               rows={4}
               placeholder="Nhập ghi chú về khách hàng"
-              className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
             />
           </div>
 
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link
               href="/customers"
-              className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 shadow-2xs cursor-pointer"
             >
               Hủy
             </Link>
 
-            <SubmitButton
-              idleText="Thêm khách hàng"
-              pendingText="Đang thêm..."
-            />
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-6 py-2.5 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
+            >
+              + Thêm khách hàng
+            </button>
           </div>
         </form>
       </div>
@@ -240,14 +269,12 @@ function FormField({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-semibold text-slate-700"
+        className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
       >
         {label}
 
         {required && (
-          <span className="ml-1 text-red-500">
-            *
-          </span>
+          <span className="ml-1 text-red-500">*</span>
         )}
       </label>
 
@@ -258,7 +285,7 @@ function FormField({
         placeholder={placeholder}
         defaultValue={defaultValue}
         required={required}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
       />
     </div>
   );
@@ -288,14 +315,12 @@ function SelectField({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-semibold text-slate-700"
+        className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
       >
         {label}
 
         {required && (
-          <span className="ml-1 text-red-500">
-            *
-          </span>
+          <span className="ml-1 text-red-500">*</span>
         )}
       </label>
 
@@ -304,7 +329,7 @@ function SelectField({
         name={name}
         defaultValue={defaultValue}
         required={required}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
       >
         {options.map((option) => (
           <option

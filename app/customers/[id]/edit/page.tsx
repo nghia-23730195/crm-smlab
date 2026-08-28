@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { updateCustomer } from "@/app/customers/actions";
-import SubmitButton from "@/components/SubmitButton";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 
@@ -129,19 +128,19 @@ export default async function EditCustomerPage({
       <div className="mx-auto max-w-5xl">
         <form
           action={updateCustomerWithId}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-xs"
         >
-          <div className="border-b border-slate-200 pb-5">
+          <div className="border-b border-slate-100 pb-5 mb-6">
             <h2 className="text-lg font-bold text-slate-900">
-              Cập nhật khách hàng
+              Cập nhật thông tin khách hàng
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
-              Chỉnh sửa thông tin và trạng thái của khách hàng.
+            <p className="mt-1 text-xs text-slate-500">
+              Chỉnh sửa thông tin và trạng thái của khách hàng trong hệ thống.
             </p>
           </div>
 
-          <div className="mt-6 grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2">
             <FormField
               label="Mã khách hàng"
               name="customer_code"
@@ -205,7 +204,7 @@ export default async function EditCustomerPage({
           <div className="mt-5">
             <label
               htmlFor="address"
-              className="mb-2 block text-sm font-semibold text-slate-700"
+              className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
             >
               Địa chỉ
             </label>
@@ -216,14 +215,14 @@ export default async function EditCustomerPage({
               rows={2}
               defaultValue={customer.address ?? ""}
               placeholder="Nhập địa chỉ khách hàng"
-              className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
             />
           </div>
 
           <div className="mt-5">
             <label
               htmlFor="notes"
-              className="mb-2 block text-sm font-semibold text-slate-700"
+              className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
             >
               Ghi chú
             </label>
@@ -234,22 +233,24 @@ export default async function EditCustomerPage({
               rows={4}
               defaultValue={customer.notes ?? ""}
               placeholder="Nhập ghi chú về khách hàng"
-              className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
             />
           </div>
 
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link
               href="/customers"
-              className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 shadow-2xs cursor-pointer"
             >
               Hủy
             </Link>
 
-            <SubmitButton
-              idleText="Lưu thay đổi"
-              pendingText="Đang lưu..."
-            />
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-6 py-2.5 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
+            >
+              💾 Lưu thay đổi
+            </button>
           </div>
         </form>
       </div>
@@ -276,14 +277,12 @@ function FormField({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-semibold text-slate-700"
+        className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
       >
         {label}
 
         {required && (
-          <span className="ml-1 text-red-500">
-            *
-          </span>
+          <span className="ml-1 text-red-500">*</span>
         )}
       </label>
 
@@ -293,7 +292,7 @@ function FormField({
         type={type}
         defaultValue={defaultValue}
         required={required}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
       />
     </div>
   );
@@ -323,14 +322,12 @@ function SelectField({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-semibold text-slate-700"
+        className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
       >
         {label}
 
         {required && (
-          <span className="ml-1 text-red-500">
-            *
-          </span>
+          <span className="ml-1 text-red-500">*</span>
         )}
       </label>
 
@@ -339,7 +336,7 @@ function SelectField({
         name={name}
         defaultValue={defaultValue}
         required={required}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
       >
         {options.map((option) => (
           <option

@@ -63,12 +63,6 @@ function getCustomerData(formData: FormData) {
     "status",
   ) as CustomerStatus;
 
-  if (!customerCode) {
-    throw new Error(
-      "Vui lòng nhập mã khách hàng.",
-    );
-  }
-
   if (!fullName) {
     throw new Error(
       "Vui lòng nhập họ tên khách hàng.",
@@ -119,6 +113,26 @@ export async function createCustomer(
   const data =
     getCustomerData(formData);
 
+  let finalCustomerCode = data.customerCode;
+  if (!finalCustomerCode) {
+    const allCustomers = await prisma.customers.findMany({
+      where: { organization_id: organizationId },
+      select: { customer_code: true },
+    });
+
+    let maxNum = 0;
+    for (const c of allCustomers) {
+      const match = c.customer_code.match(/(\d+)/);
+      if (match && match[1]) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) {
+          maxNum = num;
+        }
+      }
+    }
+    finalCustomerCode = `KH-${String(Math.max(maxNum + 1, allCustomers.length + 1)).padStart(3, "0")}`;
+  }
+
   const existingCustomer =
     await prisma.customers.findFirst({
       where: {
@@ -126,7 +140,7 @@ export async function createCustomer(
             organizationId,
 
         customer_code:
-            data.customerCode,
+            finalCustomerCode,
         },
       select: {
         id: true,
@@ -135,17 +149,17 @@ export async function createCustomer(
 
   if (existingCustomer) {
     throw new Error(
-      `Mã khách hàng ${data.customerCode} đã tồn tại.`,
+      `Mã khách hàng ${finalCustomerCode} đã tồn tại.`,
     );
   }
 
   await prisma.customers.create({
     data: {
-     organization_id:
+      organization_id:
         organizationId,
 
-    customer_code:
-      data.customerCode,
+      customer_code:
+        finalCustomerCode,
       customer_type: data.customerType,
       full_name: data.fullName,
       company_name: data.companyName || null,
