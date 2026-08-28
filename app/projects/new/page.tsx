@@ -53,11 +53,20 @@ export default async function NewProjectPage() {
 
   return (
     <div className="p-5 md:p-8">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-4xl">
         <form
           action={createProject}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+          className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-xs"
         >
+          <div className="border-b border-slate-100 pb-5 mb-6">
+            <h2 className="text-lg font-bold text-slate-900">
+              Thêm dự án mới
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Nhập thông tin hợp đồng, tiến độ và tài chính để khởi tạo dự án trong hệ thống.
+            </p>
+          </div>
+
           <div className="grid gap-5 md:grid-cols-2">
             <FormField
               label="Mã dự án (Tự động đánh mã)"
@@ -77,7 +86,7 @@ export default async function NewProjectPage() {
             <div>
               <label
                 htmlFor="customer_id"
-                className="mb-2 block text-sm font-semibold text-slate-700"
+                className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
               >
                 Khách hàng
               </label>
@@ -86,7 +95,7 @@ export default async function NewProjectPage() {
                 id="customer_id"
                 name="customer_id"
                 defaultValue=""
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
               >
                 <option value="">Chưa chọn khách hàng</option>
 
@@ -95,8 +104,7 @@ export default async function NewProjectPage() {
                     key={customer.id}
                     value={customer.id}
                   >
-                    {customer.customer_code} -{" "}
-                    {customer.full_name}
+                    {customer.customer_code} - {customer.full_name}
                   </option>
                 ))}
               </select>
@@ -105,7 +113,27 @@ export default async function NewProjectPage() {
             <FormField
               label="Loại dự án"
               name="project_type"
-              placeholder="Ví dụ: Robot, IoT, AI, Website..."
+              placeholder="Ví dụ: KHKT, STEM, Robot, IoT, AI..."
+            />
+
+            <FormField
+              label="Tổng giá trị hợp đồng (VNĐ)"
+              name="actual_value"
+              type="number"
+              min="0"
+              step="1000"
+              defaultValue="0"
+              placeholder="0"
+            />
+
+            <FormField
+              label="Số tiền đã thanh toán (VNĐ)"
+              name="paid_amount"
+              type="number"
+              min="0"
+              step="1000"
+              defaultValue="0"
+              placeholder="0"
             />
 
             <SelectField
@@ -148,42 +176,16 @@ export default async function NewProjectPage() {
             />
 
             <FormField
-              label="Hạn hoàn thành"
-              name="due_date"
-              type="date"
-            />
-
-            <FormField
               label="Ngày hoàn thành"
               name="completed_date"
               type="date"
-            />
-
-            <FormField
-              label="Tổng giá trị hợp đồng (VNĐ)"
-              name="actual_value"
-              type="number"
-              min="0"
-              step="1000"
-              defaultValue="0"
-              placeholder="Nhập giá trị hợp đồng (ví dụ: 10000000)"
-            />
-
-            <FormField
-              label="Số tiền đã thanh toán (VNĐ)"
-              name="paid_amount"
-              type="number"
-              min="0"
-              step="1000"
-              defaultValue="0"
-              placeholder="0"
             />
           </div>
 
           <div className="mt-5">
             <label
               htmlFor="description"
-              className="mb-2 block text-sm font-semibold text-slate-700"
+              className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
             >
               Mô tả dự án
             </label>
@@ -191,23 +193,23 @@ export default async function NewProjectPage() {
             <textarea
               id="description"
               name="description"
-              rows={5}
+              rows={4}
               placeholder="Nhập mô tả, yêu cầu và phạm vi dự án"
-              className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
             />
           </div>
 
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link
               href="/projects"
-              className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-center text-xs font-bold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
             >
               Hủy
             </Link>
 
             <button
               type="submit"
-              className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+              className="rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white transition hover:bg-blue-700 active:scale-95 shadow-2xs cursor-pointer"
             >
               Thêm dự án
             </button>
@@ -243,7 +245,7 @@ function FormField({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-semibold text-slate-700"
+        className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
       >
         {label}
 
@@ -261,7 +263,7 @@ function FormField({
         required={required}
         min={min}
         step={step}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
       />
     </div>
   );
@@ -291,7 +293,7 @@ function SelectField({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-semibold text-slate-700"
+        className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
       >
         {label}
 
@@ -305,7 +307,7 @@ function SelectField({
         name={name}
         defaultValue={defaultValue}
         required={required}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
       >
         {options.map((option) => (
           <option
