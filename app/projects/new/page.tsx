@@ -202,16 +202,16 @@ export default async function NewProjectPage() {
           <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link
               href="/projects"
-              className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-center text-xs font-bold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 shadow-2xs cursor-pointer"
             >
               Hủy
             </Link>
 
             <button
               type="submit"
-              className="rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white transition hover:bg-blue-700 active:scale-95 shadow-2xs cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 active:scale-95 transition cursor-pointer"
             >
-              Thêm dự án
+              + Thêm dự án
             </button>
           </div>
         </form>
