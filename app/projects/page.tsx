@@ -45,15 +45,6 @@ const statusLabels: Record<ProjectStatus, string> = {
   cancelled: "Đã hủy",
 };
 
-const statusClasses: Record<ProjectStatus, string> = {
-  draft: "bg-slate-100 text-slate-700 border-slate-200",
-  planning: "bg-violet-100 text-violet-700 border-violet-200",
-  in_progress: "bg-blue-100 text-blue-700 border-blue-200",
-  waiting: "bg-amber-100 text-amber-800 border-amber-200",
-  completed: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  cancelled: "bg-red-100 text-red-700 border-red-200",
-};
-
 function formatCurrency(value: unknown) {
   const amount = Number(value ?? 0);
 
@@ -355,9 +346,6 @@ export default async function ProjectsPage({
     currentSystemYear - 3,
   ];
 
-  const yearDisplayLabel =
-    selectedYear !== "all" ? `NĂM ${selectedYear}` : "TOÀN BỘ";
-
   return (
     <div className="p-5 md:p-8 space-y-6">
       {params.success === "created" && (
@@ -384,102 +372,26 @@ export default async function ProjectsPage({
         </div>
       )}
 
-      {/* 0. Year Selection Pills Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold uppercase text-slate-500 mr-1">
-            Tổng hợp theo năm:
-          </span>
-
-          <Link
-            href={`/projects?year=${currentSystemYear}&status=${selectedStatus}&customer=${selectedCustomer}&deadline=${selectedDeadline}&view=${currentView}`}
-            className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
-              selectedYear === String(currentSystemYear)
-                ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-            }`}
-          >
-            Năm nay ({currentSystemYear})
-          </Link>
-
-          <Link
-            href={`/projects?year=${currentSystemYear - 1}&status=${selectedStatus}&customer=${selectedCustomer}&deadline=${selectedDeadline}&view=${currentView}`}
-            className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
-              selectedYear === String(currentSystemYear - 1)
-                ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-            }`}
-          >
-            Năm trước ({currentSystemYear - 1})
-          </Link>
-
-          <Link
-            href={`/projects?year=${currentSystemYear - 2}&status=${selectedStatus}&customer=${selectedCustomer}&deadline=${selectedDeadline}&view=${currentView}`}
-            className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
-              selectedYear === String(currentSystemYear - 2)
-                ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-            }`}
-          >
-            Năm {currentSystemYear - 2}
-          </Link>
-
-          <Link
-            href={`/projects?year=all&status=${selectedStatus}&customer=${selectedCustomer}&deadline=${selectedDeadline}&view=${currentView}`}
-            className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
-              selectedYear === "all"
-                ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-            }`}
-          >
-            Toàn thời gian
-          </Link>
-        </div>
-
-        {/* Deadline Alert Summary on Header */}
-        <div className="flex items-center gap-2 text-xs font-bold">
-          {overdueProjectsCount > 0 && (
-            <Link
-              href={`/projects?year=${selectedYear}&deadline=overdue&view=${currentView}`}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3 py-1 text-white shadow-xs animate-pulse hover:bg-red-700"
-            >
-              <span>🚨</span>
-              <span>{overdueProjectsCount} dự án quá hạn!</span>
-            </Link>
-          )}
-
-          {dueSoonProjectsCount > 0 && (
-            <Link
-              href={`/projects?year=${selectedYear}&deadline=due_soon&view=${currentView}`}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-1 text-white shadow-xs hover:bg-amber-600"
-            >
-              <span>⚠️</span>
-              <span>{dueSoonProjectsCount} dự án sắp đến hạn</span>
-            </Link>
-          )}
-        </div>
-      </div>
-
-      {/* 1. Projects KPIs Aggregated by Year */}
+      {/* 1. Projects KPIs Aggregated */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase text-slate-500">
-            Tổng số dự án ({yearDisplayLabel})
+            Tổng số dự án
           </p>
           <p className="mt-2 text-2xl font-bold text-slate-900">{allProjectsSummary.length}</p>
           <p className="mt-1 text-xs text-slate-500">
-            {selectedYear !== "all" ? `Hợp đồng tạo trong năm ${selectedYear}` : "Toàn bộ hợp đồng & đơn hàng"}
+            {selectedYear !== "all" ? `Năm ${selectedYear}` : "Toàn bộ hợp đồng & đơn hàng"}
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase text-slate-500">
-            Đang triển khai ({yearDisplayLabel})
+            Đang triển khai
           </p>
           <p className="mt-2 text-2xl font-bold text-blue-600">{activeCount}</p>
           <div className="mt-1 flex items-center gap-2 text-xs font-medium">
             {overdueProjectsCount > 0 ? (
-              <span className="text-red-600 font-bold">{overdueProjectsCount} trễ hạn</span>
+              <span className="text-rose-600 font-bold">{overdueProjectsCount} trễ hạn</span>
             ) : (
               <span className="text-emerald-600">Tiến độ đúng hạn</span>
             )}
@@ -488,7 +400,7 @@ export default async function ProjectsPage({
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase text-slate-500">
-            Tổng giá trị hợp đồng ({yearDisplayLabel})
+            Tổng giá trị hợp đồng
           </p>
           <p className="mt-2 text-2xl font-bold text-emerald-600">{formatCurrency(totalValue)}</p>
           <p className="mt-1 text-xs text-emerald-600 font-medium">Đã thu: {formatCurrency(totalPaid)}</p>
@@ -496,7 +408,7 @@ export default async function ProjectsPage({
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase text-slate-500">
-            Công nợ còn lại ({yearDisplayLabel})
+            Công nợ còn lại
           </p>
           <p className="mt-2 text-2xl font-bold text-amber-600">{formatCurrency(totalDebt)}</p>
           <p className="mt-1 text-xs text-amber-700 font-medium">Cần đối soát & thu hồi</p>
@@ -505,152 +417,52 @@ export default async function ProjectsPage({
 
       {/* 2. Main Section */}
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-6">
+        <div className="border-b border-slate-100 p-5 md:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                Quản lý & Tiến độ dự án
-              </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                Hiển thị {projects.length} dự án theo bộ lọc ({yearDisplayLabel})
-              </p>
-            </div>
-
-            {/* Actions: View Switcher, Export CSV, Add Project */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/* View Switcher Toggle */}
-              <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200">
-                <Link
-                  href={`/projects?q=${encodeURIComponent(keyword)}&year=${encodeURIComponent(selectedYear)}&customer=${encodeURIComponent(selectedCustomer)}&status=${encodeURIComponent(selectedStatus)}&deadline=${encodeURIComponent(selectedDeadline)}&view=list`}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                    currentView === "list"
-                      ? "bg-white text-blue-600 shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  Danh sách
-                </Link>
-
-                <Link
-                  href={`/projects?q=${encodeURIComponent(keyword)}&year=${encodeURIComponent(selectedYear)}&customer=${encodeURIComponent(selectedCustomer)}&status=${encodeURIComponent(selectedStatus)}&deadline=${encodeURIComponent(selectedDeadline)}&view=kanban`}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                    currentView === "kanban"
-                      ? "bg-white text-blue-600 shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                  </svg>
-                  Bảng Kanban
-                </Link>
-              </div>
-
-              <ExportCsvButton
-                filename={`danh-sach-du-an-smlab-${selectedYear}`}
-                headers={csvHeaders}
-                rows={csvRows}
-              />
-
+            {/* View Switcher Toggle */}
+            <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
               <Link
-                href="/projects/new"
-                className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
-              >
-                + Thêm dự án mới
-              </Link>
-            </div>
-          </div>
-
-          {/* Quick Deadline Filter Pills */}
-          <div className="mt-5 flex flex-wrap items-center gap-2 border-b border-slate-100 pb-3">
-            <span className="text-xs font-bold uppercase text-slate-400 mr-1">
-              Thời hạn deadline:
-            </span>
-
-            <Link
-              href={`/projects?q=${encodeURIComponent(keyword)}&year=${encodeURIComponent(selectedYear)}&customer=${encodeURIComponent(selectedCustomer)}&status=${encodeURIComponent(selectedStatus)}&view=${currentView}&deadline=all`}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
-                selectedDeadline === "all"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              Tất cả thời hạn
-            </Link>
-
-            <Link
-              href={`/projects?q=${encodeURIComponent(keyword)}&year=${encodeURIComponent(selectedYear)}&customer=${encodeURIComponent(selectedCustomer)}&status=${encodeURIComponent(selectedStatus)}&view=${currentView}&deadline=overdue`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
-                selectedDeadline === "overdue"
-                  ? "bg-red-600 text-white border-red-600 shadow-xs"
-                  : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-              }`}
-            >
-              🚨 Quá hạn ({overdueProjectsCount})
-            </Link>
-
-            <Link
-              href={`/projects?q=${encodeURIComponent(keyword)}&year=${encodeURIComponent(selectedYear)}&customer=${encodeURIComponent(selectedCustomer)}&status=${encodeURIComponent(selectedStatus)}&view=${currentView}&deadline=due_soon`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
-                selectedDeadline === "due_soon"
-                  ? "bg-amber-500 text-white border-amber-500 shadow-xs"
-                  : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
-              }`}
-            >
-              ⚠️ Sắp đến hạn ({dueSoonProjectsCount})
-            </Link>
-
-            <Link
-              href={`/projects?q=${encodeURIComponent(keyword)}&year=${encodeURIComponent(selectedYear)}&customer=${encodeURIComponent(selectedCustomer)}&status=${encodeURIComponent(selectedStatus)}&view=${currentView}&deadline=this_week`}
-              className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
-                selectedDeadline === "this_week"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                  : "bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100"
-              }`}
-            >
-              📅 Trong tuần này
-            </Link>
-          </div>
-
-          {/* Quick Status Filter Pills */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Link
-              href={`/projects?q=${encodeURIComponent(keyword)}&year=${encodeURIComponent(selectedYear)}&customer=${encodeURIComponent(selectedCustomer)}&deadline=${encodeURIComponent(selectedDeadline)}&view=${currentView}&status=all`}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
-                selectedStatus === "all"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              Tất cả trạng thái ({allProjectsSummary.length})
-            </Link>
-
-            {validStatuses.map((st) => (
-              <Link
-                key={st}
-                href={`/projects?q=${encodeURIComponent(keyword)}&year=${encodeURIComponent(selectedYear)}&customer=${encodeURIComponent(selectedCustomer)}&deadline=${encodeURIComponent(selectedDeadline)}&view=${currentView}&status=${st}`}
-                className={`rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition ${
-                  selectedStatus === st
-                    ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                    : `${statusClasses[st]} hover:opacity-80`
+                href={`/projects?q=${encodeURIComponent(keyword)}&year=${encodeURIComponent(selectedYear)}&customer=${encodeURIComponent(selectedCustomer)}&status=${encodeURIComponent(selectedStatus)}&deadline=${encodeURIComponent(selectedDeadline)}&view=list`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  currentView === "list"
+                    ? "bg-white text-blue-700 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                {statusLabels[st]}
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Danh sách
               </Link>
-            ))}
+
+              <Link
+                href={`/projects?q=${encodeURIComponent(keyword)}&year=${encodeURIComponent(selectedYear)}&customer=${encodeURIComponent(selectedCustomer)}&status=${encodeURIComponent(selectedStatus)}&deadline=${encodeURIComponent(selectedDeadline)}&view=kanban`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  currentView === "kanban"
+                    ? "bg-white text-blue-700 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+                Bảng Kanban
+              </Link>
+            </div>
+
+            <ExportCsvButton
+              filename={`danh-sach-du-an-smlab-${selectedYear}`}
+              headers={csvHeaders}
+              rows={csvRows}
+            />
           </div>
 
-          {/* Filter Controls with Year & Customer Select */}
+          {/* Unified Compact Filter Controls */}
           <form
             action="/projects"
             method="GET"
-            className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_160px_220px_auto_auto]"
+            className="mt-4 flex flex-wrap items-center gap-2.5 pt-4 border-t border-slate-100"
           >
-            <input type="hidden" name="status" value={selectedStatus} />
-            <input type="hidden" name="deadline" value={selectedDeadline} />
             <input type="hidden" name="view" value={currentView} />
 
             <input
@@ -658,16 +470,42 @@ export default async function ProjectsPage({
               name="q"
               defaultValue={keyword}
               placeholder="Tìm mã, tên dự án, ghi chú..."
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-48 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
+
+            {/* Status Selector */}
+            <select
+              name="status"
+              defaultValue={selectedStatus}
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+            >
+              <option value="all">Tất cả trạng thái</option>
+              {validStatuses.map((st) => (
+                <option key={st} value={st}>
+                  {statusLabels[st]}
+                </option>
+              ))}
+            </select>
+
+            {/* Deadline Selector */}
+            <select
+              name="deadline"
+              defaultValue={selectedDeadline}
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
+            >
+              <option value="all">Tất cả thời hạn</option>
+              <option value="overdue">🚨 Quá hạn ({overdueProjectsCount})</option>
+              <option value="due_soon">⚠️ Sắp đến hạn ({dueSoonProjectsCount})</option>
+              <option value="this_week">📅 Trong tuần này</option>
+            </select>
 
             {/* Year Selector */}
             <select
               name="year"
               defaultValue={selectedYear}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500"
             >
-              <option value="all">Tất cả năm</option>
+              <option value="all">Tất cả các năm</option>
               {yearOptions.map((y) => (
                 <option key={y} value={y}>
                   Năm {y}
@@ -675,10 +513,11 @@ export default async function ProjectsPage({
               ))}
             </select>
 
+            {/* Customer Selector */}
             <select
               name="customer"
               defaultValue={selectedCustomer}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-blue-500 max-w-[200px]"
             >
               <option value="all">Tất cả khách hàng</option>
               {customers.map((customer) => (
@@ -690,15 +529,15 @@ export default async function ProjectsPage({
 
             <button
               type="submit"
-              className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100 hover:border-blue-300 px-4 py-2 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
             >
-              Tìm
+              🔍 Lọc
             </button>
 
             {hasFilters && (
               <Link
                 href={`/projects?view=${currentView}`}
-                className="rounded-xl border border-slate-300 bg-white px-5 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-center text-xs font-semibold text-slate-600 transition hover:bg-slate-50 shadow-2xs"
               >
                 Xóa lọc
               </Link>
