@@ -83,7 +83,7 @@ export default async function ProjectsPage({
   const selectedCustomer = String(params.customer ?? "all").trim();
   const selectedDeadline = String(params.deadline ?? "all").trim();
   const selectedSort = String(params.sort ?? "code_desc").trim();
-  const selectedYear = params.year ? String(params.year).trim() : String(currentSystemYear);
+  const selectedYear = params.year ? String(params.year).trim() : "all";
   const currentView = params.view === "kanban" ? "kanban" : "list";
 
   const validStatuses: ProjectStatus[] = [
@@ -101,13 +101,54 @@ export default async function ProjectsPage({
     ? (selectedStatus as ProjectStatus)
     : null;
 
-  const yearFilter =
+  const yearStart =
     selectedYear !== "all"
+      ? new Date(Date.UTC(Number(selectedYear), 0, 1))
+      : null;
+  const yearEnd =
+    selectedYear !== "all"
+      ? new Date(Date.UTC(Number(selectedYear) + 1, 0, 1))
+      : null;
+
+  const yearFilter =
+    selectedYear !== "all" && yearStart && yearEnd
       ? {
-          created_at: {
-            gte: new Date(Date.UTC(Number(selectedYear), 0, 1)),
-            lt: new Date(Date.UTC(Number(selectedYear) + 1, 0, 1)),
-          },
+          OR: [
+            // 1. Hạn hoàn thành thuộc năm được chọn
+            {
+              due_date: {
+                gte: yearStart,
+                lt: yearEnd,
+              },
+            },
+            // 2. Không có hạn hoàn thành nhưng ngày bắt đầu thuộc năm được chọn
+            {
+              due_date: null,
+              start_date: {
+                gte: yearStart,
+                lt: yearEnd,
+              },
+            },
+            // 3. Không có hạn & ngày bắt đầu nhưng ngày hoàn thành thuộc năm được chọn
+            {
+              due_date: null,
+              start_date: null,
+              completed_date: {
+                gte: yearStart,
+                lt: yearEnd,
+              },
+            },
+            // 4. Nếu không có ngày nào thì dùng ngày tạo trong hệ thống
+            {
+              due_date: null,
+              start_date: null,
+              completed_date: null,
+              created_at: {
+                gte: yearStart,
+                lt: yearEnd,
+              },
+            },
+          ],
         }
       : {};
 
@@ -315,7 +356,7 @@ export default async function ProjectsPage({
     selectedStatus !== "all" ||
     selectedCustomer !== "all" ||
     selectedDeadline !== "all" ||
-    selectedYear !== String(currentSystemYear) ||
+    selectedYear !== "all" ||
     selectedSort !== "code_desc";
 
   // Prepare CSV Export rows
