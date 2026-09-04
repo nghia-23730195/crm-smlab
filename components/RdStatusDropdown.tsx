@@ -22,23 +22,26 @@ export default function RdStatusDropdown({
       case "Đã thực hiện":
         return {
           label: "Đã thực hiện",
-          bgClass: "bg-[#2563eb] text-white hover:bg-blue-700 shadow-xs",
-          arrowClass: "text-blue-100",
+          bgClass: "bg-blue-50 text-blue-700 border border-blue-200/90 hover:bg-blue-100/80 shadow-2xs",
+          dotClass: "bg-blue-600",
+          arrowClass: "text-blue-500",
         };
       case "in_progress":
       case "Đang thực hiện":
         return {
           label: "Đang thực hiện",
-          bgClass: "bg-amber-600 text-white hover:bg-amber-700 shadow-xs",
-          arrowClass: "text-amber-100",
+          bgClass: "bg-amber-50 text-amber-800 border border-amber-200/90 hover:bg-amber-100/80 shadow-2xs",
+          dotClass: "bg-amber-500",
+          arrowClass: "text-amber-600",
         };
       case "pending":
       case "Chưa thực hiện":
       default:
         return {
           label: "Chưa thực hiện",
-          bgClass: "bg-[#b91c1c] text-white hover:bg-red-800 shadow-xs",
-          arrowClass: "text-red-100",
+          bgClass: "bg-rose-50 text-rose-700 border border-rose-200/90 hover:bg-rose-100/80 shadow-2xs",
+          dotClass: "bg-rose-500",
+          arrowClass: "text-rose-500",
         };
     }
   };
@@ -59,10 +62,11 @@ export default function RdStatusDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         disabled={isPending}
-        className={`inline-flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer active:scale-95 ${currentConfig.bgClass} ${
+        className={`inline-flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer active:scale-95 ${currentConfig.bgClass} ${
           isPending ? "opacity-60 cursor-wait" : ""
         }`}
       >
+        <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${currentConfig.dotClass}`} />
         <span>{currentConfig.label}</span>
         <svg
           className={`h-3 w-3 ${currentConfig.arrowClass} transition-transform ${

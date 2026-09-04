@@ -237,22 +237,22 @@ export default async function RdPage({ searchParams }: RdPageProps) {
         </div>
       )}
 
-      {/* Top Banner Header (matching the yellow sheet banner in user photo) */}
-      <div className="rounded-2xl border border-amber-200 bg-gradient-to-r from-yellow-100 via-amber-100 to-yellow-100 px-6 py-4 shadow-xs">
+      {/* Top Banner Header */}
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-5 md:p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 text-white text-base shadow-2xs">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 text-base shadow-2xs">
                 💡
               </span>
-              <h1 className="text-lg md:text-xl font-black text-amber-950 uppercase tracking-wide">
+              <h1 className="text-lg md:text-xl font-black text-slate-900 uppercase tracking-wide">
                 DANH SÁCH ĐỀ TÀI LÀM TIỀM NĂNG (R&D)
               </h1>
-              <span className="rounded-full bg-white/80 border border-amber-300 px-3 py-0.5 text-xs font-black text-amber-800 shadow-2xs">
+              <span className="rounded-full bg-slate-100 border border-slate-200 px-3 py-0.5 text-xs font-bold text-slate-700">
                 {allTopics.length} đề tài
               </span>
             </div>
-            <p className="mt-1 text-xs text-amber-900/80 font-medium">
+            <p className="mt-1 text-xs text-slate-500">
               Kho lưu trữ ý tưởng nghiên cứu, giải pháp sáng tạo khoa học kỹ thuật và sản phẩm công nghệ tiềm năng
             </p>
           </div>
@@ -407,31 +407,31 @@ export default async function RdPage({ searchParams }: RdPageProps) {
         {/* Data Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            {/* Table Header: styled with green banner accents matching the photo */}
+            {/* Table Header: styled cleanly with natural slate tones */}
             <thead>
-              <tr className="border-b border-emerald-600 bg-emerald-500 text-white font-bold text-[11px] uppercase tracking-wider">
-                <th className="py-3 px-3 text-center w-12 border-r border-emerald-400/60">
+              <tr className="border-b border-slate-200 bg-slate-50/90 text-slate-500 font-bold text-[11px] uppercase tracking-wider">
+                <th className="py-3 px-3 text-center w-12 border-r border-slate-100 text-slate-400">
                   STT
                 </th>
-                <th className="py-3 px-4 min-w-[200px] border-r border-emerald-400/60">
+                <th className="py-3 px-4 min-w-[200px] border-r border-slate-100">
                   TÊN ĐỀ TÀI
                 </th>
-                <th className="py-3 px-4 min-w-[240px] border-r border-emerald-400/60">
+                <th className="py-3 px-4 min-w-[240px] border-r border-slate-100">
                   MÔ TẢ
                 </th>
-                <th className="py-3 px-3 text-center min-w-[110px] border-r border-emerald-400/60">
+                <th className="py-3 px-3 text-center min-w-[110px] border-r border-slate-100">
                   ĐỐI TƯỢNG
                 </th>
-                <th className="py-3 px-3 text-center min-w-[130px] border-r border-emerald-400/60">
+                <th className="py-3 px-3 text-center min-w-[130px] border-r border-slate-100">
                   LĨNH VỰC
                 </th>
-                <th className="py-3 px-4 min-w-[220px] border-r border-emerald-400/60">
+                <th className="py-3 px-4 min-w-[220px] border-r border-slate-100">
                   LINK TÀI LIỆU
                 </th>
-                <th className="py-3 px-3 text-center min-w-[140px] border-r border-emerald-400/60">
+                <th className="py-3 px-3 text-center min-w-[140px] border-r border-slate-100">
                   TRẠNG THÁI
                 </th>
-                <th className="py-3 px-3 min-w-[120px] border-r border-emerald-400/60">
+                <th className="py-3 px-3 min-w-[120px] border-r border-slate-100">
                   KEYWORD
                 </th>
                 <th className="py-3 px-3 text-center w-20">
