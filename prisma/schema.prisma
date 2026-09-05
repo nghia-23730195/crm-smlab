@@ -562,6 +562,7 @@ model organizations {
   inventoryMovements inventory_movements[]
   rd_topics          rd_topics[]
   tasks              tasks[]
+  stem_models        stem_models[]
 
   @@schema("public")
 }
@@ -885,5 +886,30 @@ model tasks {
   @@index([organization_id, assigned_to])
   @@schema("public")
 }
+
+model stem_models {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id   String        @db.Uuid
+  model_code        String        @db.VarChar(50)
+  model_name        String
+  target_grade      String?       @db.VarChar(100)
+  subject           String?       @db.VarChar(150)
+  difficulty_level  String?       @default("Trung bình") @db.VarChar(50)
+  estimated_cost    Decimal?      @default(0) @db.Decimal(15, 2)
+  materials_summary String?
+  document_links    String?
+  status            String        @default("idea") @db.VarChar(50)
+  description       String?
+  created_at        DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime      @default(now()) @db.Timestamptz(6)
+  organizations     organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([organization_id, model_code])
+  @@index([organization_id, status])
+  @@index([organization_id, subject])
+  @@index([organization_id, target_grade])
+  @@schema("public")
+}
+
 
 
