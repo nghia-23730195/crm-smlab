@@ -17,6 +17,18 @@ export const STEM_STATUS_CONFIG: Record<
     arrowClass: string;
   }
 > = {
+  pending: {
+    label: "Chưa thực hiện",
+    bgClass: "bg-rose-50 text-rose-700 border border-rose-200/90 hover:bg-rose-100/80 shadow-2xs",
+    dotClass: "bg-rose-500",
+    arrowClass: "text-rose-500",
+  },
+  "Chưa thực hiện": {
+    label: "Chưa thực hiện",
+    bgClass: "bg-rose-50 text-rose-700 border border-rose-200/90 hover:bg-rose-100/80 shadow-2xs",
+    dotClass: "bg-rose-500",
+    arrowClass: "text-rose-500",
+  },
   idea: {
     label: "Ý tưởng",
     bgClass: "bg-slate-100 text-slate-700 border border-slate-200/90 hover:bg-slate-200/70 shadow-2xs",
@@ -102,6 +114,18 @@ export default function StemStatusDropdown({
             onClick={(e) => e.stopPropagation()}
             className="absolute left-0 mt-1.5 z-40 w-40 rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-100"
           >
+            <button
+              type="button"
+              onClick={() => handleSelect("pending")}
+              className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                status === "pending" || status === "Chưa thực hiện"
+                  ? "bg-rose-50 text-rose-700"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+              Chưa thực hiện
+            </button>
             <button
               type="button"
               onClick={() => handleSelect("idea")}

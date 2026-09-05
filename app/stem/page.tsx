@@ -213,8 +213,12 @@ export default async function StemPage({ searchParams }: StemPageProps) {
       return false;
     }
 
-    if (selectedStatus !== "all" && model.status !== selectedStatus) {
-      return false;
+    if (selectedStatus !== "all") {
+      if (selectedStatus === "pending") {
+        if (model.status !== "pending" && model.status !== "Chưa thực hiện") return false;
+      } else if (model.status !== selectedStatus) {
+        return false;
+      }
     }
 
     return true;
@@ -268,6 +272,8 @@ export default async function StemPage({ searchParams }: StemPageProps) {
       ? "Mẫu thử (Proto)"
       : m.status === "designing"
       ? "Đang thiết kế"
+      : m.status === "pending" || m.status === "Chưa thực hiện"
+      ? "Chưa thực hiện"
       : "Ý tưởng",
     m.document_links ?? "",
     m.description ?? "",
@@ -448,6 +454,7 @@ export default async function StemPage({ searchParams }: StemPageProps) {
               className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-50"
             >
               <option value="all">Tất cả trạng thái</option>
+              <option value="pending">Chưa thực hiện</option>
               <option value="idea">Ý tưởng</option>
               <option value="designing">Đang thiết kế</option>
               <option value="prototyping">Mẫu thử (Proto)</option>
