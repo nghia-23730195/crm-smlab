@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { recordActivity } from "@/lib/activity";
 import { prisma } from "@/lib/prisma";
-import { getNextTransactionCode } from "@/app/finance/actions";
+import { getNextTransactionCode } from "@/lib/finance";
+
 
 type ProjectStatus =
   | "draft"

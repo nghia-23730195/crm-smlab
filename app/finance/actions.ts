@@ -117,30 +117,9 @@ function getTransactionData(formData: FormData) {
   };
 }
 
-export async function getNextTransactionCode(
-  organizationId: string,
-): Promise<string> {
-  const allTransactions = await prisma.transactions.findMany({
-    where: {
-      organization_id: organizationId,
-    },
-    select: {
-      transaction_code: true,
-    },
-  });
+import { getNextTransactionCode } from "@/lib/finance";
 
-  let maxNum = 0;
-  for (const t of allTransactions) {
-    const match = t.transaction_code.match(/(\d+)/);
-    if (match && match[1]) {
-      const num = parseInt(match[1], 10);
-      if (num > maxNum) {
-        maxNum = num;
-      }
-    }
-  }
-  return `GD-${String(Math.max(maxNum + 1, allTransactions.length + 1)).padStart(3, "0")}`;
-}
+export { getNextTransactionCode };
 
 async function validateRelations(
   projectId: string,
@@ -204,8 +183,13 @@ export async function createTransaction(
   const { organizationId, userId } =
     await requireCurrentUser();
 
-  const data =
-    getTransactionData(formData);
+  let data;
+  try {
+    data = getTransactionData(formData);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Dữ liệu giao dịch không hợp lệ.";
+    redirect(`/finance/new?error=${encodeURIComponent(msg)}`);
+  }
 
   let finalTransactionCode = data.transactionCode;
   if (!finalTransactionCode) {
@@ -225,55 +209,71 @@ export async function createTransaction(
     });
 
   if (duplicate) {
-    throw new Error(
-      `Mã giao dịch ${finalTransactionCode} đã tồn tại.`,
+    redirect(
+      `/finance/new?error=${encodeURIComponent(
+        `Mã giao dịch ${finalTransactionCode} đã tồn tại trong hệ thống. Vui lòng chọn mã khác hoặc để trống để tự động cấp mã.`,
+      )}`,
     );
   }
 
-  await validateRelations(
-    data.projectId,
-    data.customerId,
-    organizationId,
-  );
+  try {
+    await validateRelations(
+      data.projectId,
+      data.customerId,
+      organizationId,
+    );
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Quan hệ dự án / khách hàng không hợp lệ.";
+    redirect(`/finance/new?error=${encodeURIComponent(msg)}`);
+  }
 
-  await prisma.transactions.create({
-    data: {
-      organization_id:
-        organizationId,
+  try {
+    await prisma.transactions.create({
+      data: {
+        organization_id:
+          organizationId,
 
-      transaction_code:
-        finalTransactionCode,
+        transaction_code:
+          finalTransactionCode,
 
-      project_id:
-        data.projectId || null,
+        project_id:
+          data.projectId || null,
 
-      customer_id:
-        data.customerId || null,
+        customer_id:
+          data.customerId || null,
 
-      transaction_type:
-        data.transactionType,
+        transaction_type:
+          data.transactionType,
 
-      category:
-        data.category,
+        category:
+          data.category,
 
-      amount:
-        data.amount,
+        amount:
+          data.amount,
 
-      payment_method:
-        data.paymentMethod,
+        payment_method:
+          data.paymentMethod,
 
-      transaction_date:
-        data.transactionDate,
+        transaction_date:
+          data.transactionDate,
 
-      description:
-        data.description || null,
+        description:
+          data.description || null,
 
-      attachment_url:
-        data.attachmentUrl || null,
+        attachment_url:
+          data.attachmentUrl || null,
 
-      created_by: userId,
-    },
-  });
+        created_by: userId,
+      },
+    });
+  } catch (err: unknown) {
+    console.error("Error creating transaction:", err);
+    redirect(
+      `/finance/new?error=${encodeURIComponent(
+        "Lỗi lưu trữ dữ liệu vào hệ thống. Vui lòng kiểm tra lại thông tin.",
+      )}`,
+    );
+  }
 
   revalidatePath("/finance");
   revalidatePath("/");

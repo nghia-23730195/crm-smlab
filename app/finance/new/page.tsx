@@ -2,11 +2,18 @@ import Link from "next/link";
 
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
+import { getNextTransactionCode } from "@/lib/finance";
 
-import { createTransaction, getNextTransactionCode } from "../actions";
+import { createTransaction } from "../actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+type NewTransactionPageProps = {
+  searchParams: Promise<{
+    error?: string;
+  }>;
+};
 
 function getTodayInputValue() {
   const now = new Date();
@@ -18,18 +25,21 @@ function getTodayInputValue() {
   ].join("-");
 }
 
-export default async function NewTransactionPage() {
-  const { organizationId } =
-    await requireCurrentUser();
+export default async function NewTransactionPage({
+  searchParams,
+}: NewTransactionPageProps) {
+  const { organizationId } = await requireCurrentUser();
+  const params = await searchParams;
 
-  const [projects, customers, nextTransactionCode] =
-    await Promise.all([
+  let projects: { id: string; project_code: string; project_name: string }[] = [];
+  let customers: { id: string; customer_code: string; full_name: string; company_name: string | null }[] = [];
+  let nextTransactionCode = "GD-001";
+
+  try {
+    const [pList, cList, code] = await Promise.all([
       prisma.projects.findMany({
         where: {
           organization_id: organizationId,
-          status: {
-            not: "cancelled",
-          },
         },
         select: {
           id: true,
@@ -44,9 +54,6 @@ export default async function NewTransactionPage() {
       prisma.customers.findMany({
         where: {
           organization_id: organizationId,
-          status: {
-            not: "inactive",
-          },
         },
         select: {
           id: true,
@@ -62,20 +69,56 @@ export default async function NewTransactionPage() {
       getNextTransactionCode(organizationId),
     ]);
 
+    projects = pList;
+    customers = cList;
+    nextTransactionCode = code;
+  } catch (err) {
+    console.error("Error loading data for NewTransactionPage:", err);
+  }
+
   return (
     <div className="p-5 md:p-8">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-4xl space-y-6">
+        {/* Navigation & Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+              <Link href="/finance" className="hover:text-blue-600 transition">
+                Quản lý tài chính
+              </Link>
+              <span>/</span>
+              <span className="text-slate-900">Thêm giao dịch</span>
+            </div>
+            <h1 className="mt-1 text-xl font-bold text-slate-900">
+              Thêm giao dịch thu / chi mới
+            </h1>
+          </div>
+
+          <Link
+            href="/finance"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 shadow-2xs"
+          >
+            Quay lại sổ quỹ
+          </Link>
+        </div>
+
+        {params.error && (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 animate-in fade-in">
+            {params.error}
+          </div>
+        )}
+
         <form
           action={createTransaction}
           className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 shadow-xs"
         >
           <div className="border-b border-slate-100 pb-5 mb-6">
             <h2 className="text-lg font-bold text-slate-900">
-              Thêm giao dịch thu / chi mới
+              Ghi nhận phiếu thu / chi vào sổ quỹ
             </h2>
 
             <p className="mt-1 text-xs text-slate-500">
-              Ghi nhận phiếu thu hoặc phiếu chi vào sổ quỹ tài chính hệ thống.
+              Hệ thống sẽ tự động cập nhật số dư quỹ, dòng tiền và doanh thu tương ứng.
             </p>
           </div>
 
