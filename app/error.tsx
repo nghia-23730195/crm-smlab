@@ -25,14 +25,15 @@ export default function ErrorPage({
       // Tự động tải lại trang 1 lần nếu gặp lỗi phiên bản cũ (deployment skew)
       if (!lastAttempt || Date.now() - Number(lastAttempt) > 15000) {
         sessionStorage.setItem(key, String(Date.now()));
-        window.location.reload();
+        window.location.href = window.location.pathname;
       }
     }
   }, [isServerActionSkew]);
 
   const handleAction = () => {
     if (isServerActionSkew) {
-      window.location.reload();
+      sessionStorage.removeItem("next_action_reload_attempt");
+      window.location.href = window.location.pathname;
     } else {
       reset();
     }

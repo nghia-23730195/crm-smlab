@@ -133,10 +133,8 @@ export default async function EditTransactionPage({
             <FormField
               label="Số tiền (VNĐ)"
               name="amount"
-              type="number"
-              min="1000"
-              step="1000"
-              defaultValue={transaction.amount.toString()}
+              type="text"
+              defaultValue={Number(transaction.amount).toLocaleString("vi-VN")}
               required
             />
 

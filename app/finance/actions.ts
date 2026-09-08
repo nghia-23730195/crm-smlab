@@ -33,10 +33,10 @@ function parseTransactionDate(value: string) {
 }
 
 function parseAmount(value: string) {
-  const normalized = value.replace(/[.,\s]/g, "");
+  const normalized = value.replace(/[^\d]/g, "");
 
   if (!normalized) {
-    throw new Error("Vui lòng nhập số tiền.");
+    throw new Error("Vui lòng nhập số tiền hợp lệ.");
   }
 
   const amount = Number(normalized);
@@ -119,8 +119,6 @@ function getTransactionData(formData: FormData) {
 
 import { getNextTransactionCode } from "@/lib/finance";
 
-export { getNextTransactionCode };
-
 async function validateRelations(
   projectId: string,
   customerId: string,
@@ -130,77 +128,57 @@ async function validateRelations(
     const project = await prisma.projects.findFirst({
       where: {
         id: projectId,
-        organization_id:
-          organizationId,
+        organization_id: organizationId,
       },
       select: {
         id: true,
-        customer_id: true,
       },
     });
 
     if (!project) {
-      throw new Error(
-        "Dự án được chọn không tồn tại.",
-      );
-    }
-
-    if (
-      customerId &&
-      project.customer_id &&
-      project.customer_id !== customerId
-    ) {
-      throw new Error(
-        "Khách hàng được chọn không khớp với khách hàng của dự án.",
-      );
+      throw new Error("Dự án được chọn không tồn tại.");
     }
   }
 
   if (customerId) {
-    const customer =
-      await prisma.customers.findFirst({
-        where: {
-          id: customerId,
-          organization_id:
-            organizationId,
-        },
-        select: {
-          id: true,
-        },
-      });
+    const customer = await prisma.customers.findFirst({
+      where: {
+        id: customerId,
+        organization_id: organizationId,
+      },
+      select: {
+        id: true,
+      },
+    });
 
     if (!customer) {
-      throw new Error(
-        "Khách hàng được chọn không tồn tại.",
-      );
+      throw new Error("Khách hàng / đối tác được chọn không tồn tại.");
     }
   }
 }
 
-export async function createTransaction(
-  formData: FormData,
-) {
-  const { organizationId, userId } =
-    await requireCurrentUser();
+export async function createTransaction(formData: FormData) {
+  const { organizationId, userId } = await requireCurrentUser();
 
   let data;
   try {
     data = getTransactionData(formData);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Dữ liệu giao dịch không hợp lệ.";
+    const msg =
+      err instanceof Error
+        ? err.message
+        : "Dữ liệu giao dịch không hợp lệ.";
     redirect(`/finance/new?error=${encodeURIComponent(msg)}`);
   }
 
   let finalTransactionCode = data.transactionCode;
   if (!finalTransactionCode) {
     finalTransactionCode = await getNextTransactionCode(organizationId);
-  }
-
-  const duplicate =
-    await prisma.transactions.findFirst({
+  } else {
+    // Check if code was already used
+    const duplicate = await prisma.transactions.findFirst({
       where: {
-        organization_id:
-          organizationId,
+        organization_id: organizationId,
         transaction_code: finalTransactionCode,
       },
       select: {
@@ -208,12 +186,10 @@ export async function createTransaction(
       },
     });
 
-  if (duplicate) {
-    redirect(
-      `/finance/new?error=${encodeURIComponent(
-        `Mã giao dịch ${finalTransactionCode} đã tồn tại trong hệ thống. Vui lòng chọn mã khác hoặc để trống để tự động cấp mã.`,
-      )}`,
-    );
+    if (duplicate) {
+      // Auto-assign next code instead of erroring out
+      finalTransactionCode = await getNextTransactionCode(organizationId);
+    }
   }
 
   try {
@@ -223,56 +199,69 @@ export async function createTransaction(
       organizationId,
     );
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Quan hệ dự án / khách hàng không hợp lệ.";
+    const msg =
+      err instanceof Error
+        ? err.message
+        : "Quan hệ dự án / khách hàng không hợp lệ.";
     redirect(`/finance/new?error=${encodeURIComponent(msg)}`);
   }
 
   try {
     await prisma.transactions.create({
       data: {
-        organization_id:
-          organizationId,
-
-        transaction_code:
-          finalTransactionCode,
-
-        project_id:
-          data.projectId || null,
-
-        customer_id:
-          data.customerId || null,
-
-        transaction_type:
-          data.transactionType,
-
-        category:
-          data.category,
-
-        amount:
-          data.amount,
-
-        payment_method:
-          data.paymentMethod,
-
-        transaction_date:
-          data.transactionDate,
-
-        description:
-          data.description || null,
-
-        attachment_url:
-          data.attachmentUrl || null,
-
+        organization_id: organizationId,
+        transaction_code: finalTransactionCode,
+        project_id: data.projectId || null,
+        customer_id: data.customerId || null,
+        transaction_type: data.transactionType,
+        category: data.category,
+        amount: data.amount,
+        payment_method: data.paymentMethod,
+        transaction_date: data.transactionDate,
+        description: data.description || null,
+        attachment_url: data.attachmentUrl || null,
         created_by: userId,
       },
     });
   } catch (err: unknown) {
     console.error("Error creating transaction:", err);
-    redirect(
-      `/finance/new?error=${encodeURIComponent(
-        "Lỗi lưu trữ dữ liệu vào hệ thống. Vui lòng kiểm tra lại thông tin.",
-      )}`,
-    );
+    // If collision P2002, retry with fresh code
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      try {
+        const fallbackCode = await getNextTransactionCode(organizationId);
+        await prisma.transactions.create({
+          data: {
+            organization_id: organizationId,
+            transaction_code: fallbackCode,
+            project_id: data.projectId || null,
+            customer_id: data.customerId || null,
+            transaction_type: data.transactionType,
+            category: data.category,
+            amount: data.amount,
+            payment_method: data.paymentMethod,
+            transaction_date: data.transactionDate,
+            description: data.description || null,
+            attachment_url: data.attachmentUrl || null,
+            created_by: userId,
+          },
+        });
+        revalidatePath("/finance");
+        revalidatePath("/");
+        revalidatePath("/projects");
+        revalidatePath("/reports");
+        redirect("/finance?success=created");
+      } catch (retryErr) {
+        console.error("Retry creating transaction error:", retryErr);
+      }
+    }
+    const msg =
+      err instanceof Error
+        ? err.message
+        : "Lỗi lưu trữ dữ liệu vào hệ thống. Vui lòng kiểm tra lại thông tin.";
+    redirect(`/finance/new?error=${encodeURIComponent(msg)}`);
   }
 
   revalidatePath("/finance");
