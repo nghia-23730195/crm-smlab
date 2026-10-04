@@ -7,10 +7,13 @@ import ProjectKanbanBoard from "@/components/ProjectKanbanBoard";
 import ProjectStatusSelect from "@/components/ProjectStatusSelect";
 import QuickPaymentAdjuster from "@/components/QuickPaymentAdjuster";
 import { getDeadlineInfo } from "@/lib/deadline";
-import { formatProjectTitle } from "@/lib/formatters";
+import {
+  formatProjectTitle,
+  formatCurrency,
+  formatDate,
+} from "@/lib/formatters";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-import { deleteProject } from "./actions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,37 +49,15 @@ const statusLabels: Record<ProjectStatus, string> = {
   cancelled: "Đã hủy",
 };
 
-function formatCurrency(value: unknown) {
-  const amount = Number(value ?? 0);
-
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(Number.isFinite(amount) ? amount : 0);
-}
-
-function formatDate(value: Date | null) {
-  if (!value) {
-    return "Chưa thiết lập";
-  }
-
-  return new Intl.DateTimeFormat("vi-VN", {
-    timeZone: "UTC",
-    dateStyle: "medium",
-  }).format(value);
-}
-
 export default async function ProjectsPage({
   searchParams,
 }: ProjectsPageProps) {
-  const { organizationId } =
-    await requireCurrentUser();
-
+  const { organizationId } = await requireCurrentUser();
   const params = await searchParams;
 
-  const now = new Date();
-  const currentSystemYear = now.getUTCFullYear();
+  try {
+    const now = new Date();
+    const currentSystemYear = now.getUTCFullYear();
 
   const keyword = String(params.q ?? "").trim();
   const selectedStatus = String(params.status ?? "all").trim();
@@ -382,18 +363,19 @@ export default async function ProjectsPage({
     const actual = Number(p.actual_value ?? 0);
     const paid = Number(p.paid_amount ?? 0);
     const debt = Math.max(0, actual - paid);
-    const dInfo = getDeadlineInfo(p.due_date, p.status);
+    const effectiveDeadline = p.due_date ?? p.completed_date;
+    const dInfo = getDeadlineInfo(effectiveDeadline, p.status);
     return [
       p.project_code,
       p.project_name,
       p.customers?.full_name || "",
       p.project_type || "",
-      p.due_date ? formatDate(p.due_date) : "",
+      effectiveDeadline ? formatDate(effectiveDeadline) : "",
       dInfo.label,
       actual,
       paid,
       debt,
-      p._count.project_items,
+      p._count?.project_items ?? 0,
       statusLabels[p.status as ProjectStatus] || p.status,
     ];
   });
@@ -744,7 +726,7 @@ export default async function ProjectsPage({
                               href={`/projects/${project.id}/items`}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition"
                             >
-                              📦 {project._count.project_items} linh kiện
+                              📦 {project._count?.project_items ?? 0} linh kiện
                             </Link>
                           </td>
 
@@ -779,9 +761,10 @@ export default async function ProjectsPage({
                                 Sửa
                               </Link>
 
-                              <form action={deleteProject.bind(null, project.id)}>
-                                <DeleteProjectButton />
-                              </form>
+                              <DeleteProjectButton
+                                projectId={project.id}
+                                projectName={project.project_name}
+                              />
                             </div>
                           </td>
                         </tr>
@@ -796,4 +779,58 @@ export default async function ProjectsPage({
       </section>
     </div>
   );
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")
+    ) {
+      throw error;
+    }
+
+    console.error("[ProjectsPage Error]:", error);
+
+    return (
+      <div className="p-5 md:p-8 space-y-6">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center max-w-xl mx-auto my-12 shadow-sm">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100 text-red-600">
+            <svg
+              className="h-7 w-7"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-slate-900">
+            Không thể tải danh sách dự án
+          </h2>
+          <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+            Hệ thống gặp sự cố tạm thời khi tải dữ liệu từ máy chủ. Vui lòng tải lại trang hoặc thử lại sau giây lát.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+            >
+              Về trang chủ
+            </Link>
+            <Link
+              href="/projects"
+              className="rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 transition shadow-2xs"
+            >
+              Tải lại trang
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }

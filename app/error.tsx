@@ -82,12 +82,20 @@ export default function ErrorPage({
           </p>
         )}
 
-        <div className="mt-6 flex items-center justify-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 shadow-2xs cursor-pointer"
+          >
+            ← Quay lại
+          </button>
+
           <Link
-            href="/finance"
+            href="/"
             className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 shadow-2xs"
           >
-            Quay lại sổ quỹ
+            Về trang chủ
           </Link>
 
           <button

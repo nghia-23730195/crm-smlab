@@ -31,7 +31,7 @@ export type ProjectItem = {
     full_name: string;
     company_name: string | null;
   } | null;
-  _count: {
+  _count?: {
     project_items: number;
   };
 };
@@ -204,7 +204,7 @@ export default function ProjectKanbanBoard({
                             {project.project_code}
                           </span>
                           <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                            📦 {project._count.project_items} BOM
+                            📦 {project._count?.project_items ?? 0} BOM
                           </span>
                         </div>
 
