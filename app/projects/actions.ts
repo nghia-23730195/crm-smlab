@@ -467,67 +467,83 @@ export async function changeProjectStatus(
   revalidatePath("/");
 }
 
-export async function deleteProject(projectId: string) {
-  const { organizationId, userId } =
-    await requireCurrentUser();
+export async function deleteProject(
+  projectId: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { organizationId, userId } = await requireCurrentUser();
 
-  const project = await prisma.projects.findFirst({
-    where: {
-      id: projectId,
-      organization_id: organizationId,
-    },
-    include: {
-      _count: {
-        select: {
-          transactions: true,
-          inventoryMovements: true,
-        },
-      },
-    },
-  });
-
-  if (!project) {
-    throw new Error("Không tìm thấy dự án.");
-  }
-
-  if (
-    project._count.transactions > 0 ||
-    project._count.inventoryMovements > 0
-  ) {
-    throw new Error(
-      "Không thể xóa dự án đã có giao dịch tài chính hoặc phiếu xuất kho. Hãy đổi trạng thái sang 'Đã hủy'.",
-    );
-  }
-
-  await prisma.$transaction(async (tx) => {
-    await tx.project_items.deleteMany({
-      where: {
-        project_id: projectId,
-      },
-    });
-
-    await tx.projects.delete({
+    const project = await prisma.projects.findFirst({
       where: {
         id: projectId,
+        organization_id: organizationId,
+      },
+      include: {
+        _count: {
+          select: {
+            transactions: true,
+            inventoryMovements: true,
+          },
+        },
       },
     });
-  });
 
-  await recordActivity({
-    organizationId,
-    userId,
-    action: "delete",
-    entityType: "project",
-    entityId: projectId,
-    newData: {
-      project_name: project.project_name,
-      project_code: project.project_code,
-    },
-  });
+    if (!project) {
+      return { success: false, error: "Không tìm thấy dự án cần xóa." };
+    }
 
-  revalidatePath("/projects");
-  revalidatePath("/reports");
-  revalidatePath("/");
+    if (
+      project._count.transactions > 0 ||
+      project._count.inventoryMovements > 0
+    ) {
+      return {
+        success: false,
+        error:
+          "Không thể xóa dự án đã có giao dịch tài chính hoặc phiếu xuất kho. Hãy đổi trạng thái dự án sang 'Đã hủy'.",
+      };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.project_items.deleteMany({
+        where: {
+          project_id: projectId,
+        },
+      });
+
+      await tx.projects.delete({
+        where: {
+          id: projectId,
+        },
+      });
+    });
+
+    await recordActivity({
+      organizationId,
+      userId,
+      action: "delete",
+      entityType: "project",
+      entityId: projectId,
+      newData: {
+        project_name: project.project_name,
+        project_code: project.project_code,
+      },
+    });
+
+    revalidatePath("/projects");
+    revalidatePath("/reports");
+    revalidatePath("/");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Lỗi khi xóa dự án:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Đã xảy ra lỗi không xác định khi xóa dự án.",
+    };
+  }
 }
 
 export async function updateProjectPayment(

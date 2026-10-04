@@ -30,14 +30,17 @@ export default function DeleteProjectButton({
       if (window.confirm(message)) {
         startTransition(async () => {
           try {
-            await deleteProject(projectId);
+            const res = await deleteProject(projectId);
+            if (!res.success) {
+              alert(res.error || "Không thể xóa dự án.");
+              return;
+            }
             if (redirectTo) {
               router.push(redirectTo);
             }
           } catch (err: unknown) {
             console.error("Lỗi khi xóa dự án:", err);
             const msg = err instanceof Error ? err.message : "";
-            // Chỉ alert nếu là lỗi nghiệp vụ hợp lệ, bỏ qua các lỗi render nội bộ của Next.js
             if (
               msg &&
               !msg.includes("NEXT_REDIRECT") &&
