@@ -528,8 +528,6 @@ export async function deleteProject(projectId: string) {
   revalidatePath("/projects");
   revalidatePath("/reports");
   revalidatePath("/");
-
-  redirect("/projects?success=deleted");
 }
 
 export async function updateProjectPayment(

@@ -48,6 +48,17 @@ export function getDeadlineInfo(
   today.setUTCHours(0, 0, 0, 0);
 
   const due = new Date(dueDate);
+  if (isNaN(due.getTime())) {
+    return {
+      label: "Chưa đặt deadline",
+      badgeClass: "bg-slate-50 text-slate-400 border-slate-200",
+      isOverdue: false,
+      daysRemaining: null,
+      text: "Chưa có hạn",
+      icon: "⏳",
+    };
+  }
+
   due.setUTCHours(0, 0, 0, 0);
 
   const diffTime = due.getTime() - today.getTime();

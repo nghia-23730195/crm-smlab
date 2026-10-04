@@ -21,10 +21,10 @@ export type ProjectItem = {
   project_name: string;
   project_type: string | null;
   status: string;
-  due_date: Date | null;
-  completed_date?: Date | null;
-  actual_value: unknown;
-  paid_amount: unknown;
+  due_date: string | Date | null;
+  completed_date?: string | Date | null;
+  actual_value: number;
+  paid_amount: number;
   customers: {
     id: string;
     customer_code: string;

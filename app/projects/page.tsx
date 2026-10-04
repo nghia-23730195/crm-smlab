@@ -52,10 +52,10 @@ const statusLabels: Record<ProjectStatus, string> = {
 export default async function ProjectsPage({
   searchParams,
 }: ProjectsPageProps) {
-  const { organizationId } = await requireCurrentUser();
-  const params = await searchParams;
-
   try {
+    const { organizationId } = await requireCurrentUser();
+    const params = await searchParams;
+
     const now = new Date();
     const currentSystemYear = now.getUTCFullYear();
 
@@ -604,7 +604,30 @@ export default async function ProjectsPage({
         {/* Render View: Kanban or Table */}
         {currentView === "kanban" ? (
           <div className="p-6">
-            <ProjectKanbanBoard projects={projects} />
+            <ProjectKanbanBoard
+              projects={projects.map((p) => ({
+                id: p.id,
+                project_code: p.project_code,
+                project_name: p.project_name,
+                project_type: p.project_type,
+                status: p.status,
+                due_date: p.due_date ? p.due_date.toISOString() : null,
+                completed_date: p.completed_date ? p.completed_date.toISOString() : null,
+                actual_value: Number(p.actual_value ?? 0),
+                paid_amount: Number(p.paid_amount ?? 0),
+                customers: p.customers
+                  ? {
+                      id: p.customers.id,
+                      customer_code: p.customers.customer_code,
+                      full_name: p.customers.full_name,
+                      company_name: p.customers.company_name,
+                    }
+                  : null,
+                _count: {
+                  project_items: p._count?.project_items ?? 0,
+                },
+              }))}
+            />
           </div>
         ) : (
           <>

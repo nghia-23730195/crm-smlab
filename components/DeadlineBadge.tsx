@@ -1,4 +1,5 @@
 import { getDeadlineInfo } from "@/lib/deadline";
+import { formatDate } from "@/lib/formatters";
 
 export default function DeadlineBadge({
   dueDate,
@@ -14,7 +15,7 @@ export default function DeadlineBadge({
   return (
     <span
       className={`inline-flex items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs transition ${info.badgeClass}`}
-      title={dueDate ? `Hạn chót: ${new Date(dueDate).toLocaleDateString("vi-VN")}` : undefined}
+      title={dueDate ? `Hạn chót: ${formatDate(dueDate)}` : undefined}
     >
       {showIcon && <span className="text-[11px]">{info.icon}</span>}
       <span>{info.label}</span>

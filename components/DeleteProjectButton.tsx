@@ -1,20 +1,24 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { deleteProject } from "@/app/projects/actions";
 
 type DeleteProjectButtonProps = {
   projectId?: string;
   projectName?: string;
   className?: string;
+  redirectTo?: string;
 };
 
 export default function DeleteProjectButton({
   projectId,
   projectName,
   className,
+  redirectTo,
 }: DeleteProjectButtonProps) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (projectId) {
@@ -27,8 +31,20 @@ export default function DeleteProjectButton({
         startTransition(async () => {
           try {
             await deleteProject(projectId);
-          } catch (err) {
-            alert(err instanceof Error ? err.message : "Có lỗi xảy ra khi xóa dự án.");
+            if (redirectTo) {
+              router.push(redirectTo);
+            }
+          } catch (err: unknown) {
+            console.error("Lỗi khi xóa dự án:", err);
+            const msg = err instanceof Error ? err.message : "";
+            // Chỉ alert nếu là lỗi nghiệp vụ hợp lệ, bỏ qua các lỗi render nội bộ của Next.js
+            if (
+              msg &&
+              !msg.includes("NEXT_REDIRECT") &&
+              !msg.includes("Server Components render")
+            ) {
+              alert(msg);
+            }
           }
         });
       }
